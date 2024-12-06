@@ -1,0 +1,161 @@
+.font-akshar {
+    font-family: 'Akshar', sans-serif; 
+}
+
+.font-intel {
+    font-family: 'Inter', sans-serif;
+}
+
+.home-container {
+    padding: 20px;
+}
+
+.title {
+    font-family: 'Akshar', sans-serif;
+    font-weight: bold;
+    color: black;
+    font-size: 40px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns */
+    gap: 20px; /* space between items */
+    grid-auto-rows: auto;
+}
+
+.product-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out;
+    position: relative; /* Positioning for absolute button */
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; 
+    height: 100%; 
+}
+
+.product-card:hover {
+    background-color: #f4f4f4; /* Hover background color */
+}
+
+.product-card.active {
+    background-color: #636363; /* Active click background color */
+}
+
+.product-card.active::before {
+    filter: blur(10px); /* Blur effect when active */
+}
+
+.product-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.product-info {
+    padding: 16px;
+}
+
+.product-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.product-price {
+    color: #D07373;
+    font-size: 16px;
+    margin-top: 8px;
+}
+
+.add-to-cart-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center the button vertically and horizontally */
+    padding: 10px 20px;
+    background-color: #ffffff;
+    color: #E89F71;
+    border: none;
+    border-radius: 4px;
+    display: none; 
+    transition: opacity 0.3s ease, transform 0.3s ease; /* Add smooth transition */
+    font-weight: bold;
+}
+
+.add-to-cart-button:hover {
+    background-color: #E89F71; /* Background color change on hover */
+    color: #ffffff; /* Text color change on hover */
+    //transform: scale(1.1); /* Slightly increase button size */
+}
+
+.product-card.active .add-to-cart-button {
+    display: block; /* Show when clicked */
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+    width: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.login-btn {
+    padding: 10px;
+    margin: 5px;
+    border: none;
+    background-color: #D07373;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+.close-btn {
+    background-color: #f44336;
+}
+
+.login-btn:hover, .close-btn:hover {
+    opacity: 0.8;
+}
+
+
+@media (max-width: 1200px) {
+    .product-grid {
+        grid-template-columns: repeat(3, 1fr); /* 3 columns for medium screens */
+    }
+}
+
+@media (max-width: 900px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns for small screens */
+    }
+}
+
+@media (max-width: 600px) {
+    .product-grid {
+        grid-template-columns: 1fr; /* 1 column for very small screens */
+    }
+}

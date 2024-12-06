@@ -14,9 +14,11 @@ const Header = () => {
 
     return (
         <header className="flex justify-between items-center p-4 pl-6 bg-white shadow-md border border-solid border-[#D9D9D9]">
-            <div className="text-[#D07373] text-[36px] font-bold font-akshar">
-                EASYSTORE
-            </div>
+            <Link to="/">
+                <div className="text-[#D07373] text-[36px] font-bold font-akshar">
+                    EASYSTORE
+                </div>
+            </Link>
             <nav className="flex space-x-4">
                 {!isLoggedIn ? (
                     // Render Sign In and Register buttons

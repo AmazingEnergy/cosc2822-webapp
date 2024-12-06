@@ -67,14 +67,13 @@ const ForgotPassword = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 flex justify-center items-center bg-gray-900 bg-opacity-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-90 text-center">
+                        <div className='flex items-end justify-end' onClick={closeModal}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className='h-6 w-6'>
+                                <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z"/>
+                            </svg>
+                        </div>
                         <h2 className="text-xl font-intel text-[#337BEE] mb-4">Check your inbox</h2>
-                        <p className="text-sm text-[#333] mb-4">We’ve sent a password reset to your email address. <br/> Please check your inbox.</p>
-                        <button
-                            onClick={closeModal}
-                            className="px-4 py-2 bg-[#337BEE] text-white rounded-lg hover:bg-[#4484ea] transition-colors"
-                        >
-                            Close
-                        </button>
+                        <p className="text-sm text-[#333] font-intel mb-4">We’ve sent a password reset to your email address. <br/> Please check your inbox.</p>
                     </div>
                 </div>
             )}
