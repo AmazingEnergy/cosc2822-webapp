@@ -4,7 +4,6 @@ const AdminLayout = () => {
     return (
         <div>
             Admin Layout
-
             <Outlet />
         </div>
     )
