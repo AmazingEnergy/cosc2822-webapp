@@ -10,10 +10,10 @@ import MainLayout from "../layouts/MainLayout";
  */
 
 const HomePage = lazy(() => import("../pages/home"));
+const ProfilePage = lazy(() => import("../pages/profile"));
 const LoginPage = lazy(() => import("../pages/auth/Login"));
 const RegisterPage = lazy(() => import("../pages/auth/Register"));
 const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPassword'));
-
 const NotFoundPage = lazy(() => import('../pages/not-found'));
 
 //const HomePage = () => <div>Home Page</div>;
@@ -39,6 +39,21 @@ const useRouteElements = () => {
                     element: (
                         <Suspense fallback={<Spinner />}>
                             <HomePage />
+                        </Suspense>
+                    ),
+                },
+            ]
+        },
+        {
+            path: PATH.PROFILE,
+            element: <MainLayout />,
+            children: [
+                {
+                    path: "",
+                    index: true,
+                    element: (
+                        <Suspense fallback={<Spinner />}>
+                            <ProfilePage />
                         </Suspense>
                     ),
                 },

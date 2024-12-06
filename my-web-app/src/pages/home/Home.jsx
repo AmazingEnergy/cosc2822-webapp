@@ -52,7 +52,7 @@ const Home = () => {
 
     return (
         <div className="home-container">
-            <h1 className="title">Our Products</h1>
+            <h1 className="title mt-2">Our Products</h1>
 
             <div className="product-grid">
                 {products.map((product) => (
