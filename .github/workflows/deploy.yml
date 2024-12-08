@@ -72,4 +72,4 @@ jobs:
         run: |
           ls -l
           aws s3 ls
-          aws s3 sync ./dist/ s3://app.grp6asm3.com --follow-symlinks --delete
+          aws s3 sync ./dist/ s3://app.dev.grp6asm3.com --follow-symlinks --delete
