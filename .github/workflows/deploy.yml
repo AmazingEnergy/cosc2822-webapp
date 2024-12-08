@@ -1,4 +1,4 @@
-name: Build & Temporary Release
+name: Build & Deploy
 
 on:
   push:
