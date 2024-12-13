@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
+import { Auth } from 'aws-amplify';
 import './login.scss';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Handle login logic here
-        console.log('Email:', email);
-        console.log('Password:', password);
+        try {
+            const user = await Auth.signIn(email, password);
+            console.log('Login successful:', user);
+            alert('Login successful!');
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('Invalid email or password');
+        }
     };
 
     return (
