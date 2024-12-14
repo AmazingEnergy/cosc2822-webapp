@@ -9,8 +9,8 @@ import {
 import CryptoJS from "crypto-js";
 
 const REGION = "ap-southeast-1"; 
-const CLIENT_ID = "3emm24gb6pa57ul4f98ahmb44b"; 
-const CLIENT_SECRET = "fogqb8iqvfdb8ucmtspgu3ai6ok7laev0p1uaegf43ke8rvuu38";
+const CLIENT_ID = ""; 
+const CLIENT_SECRET = "";
 
 const cognitoClient = new CognitoIdentityProviderClient({ region: REGION });
 
