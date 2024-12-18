@@ -33,10 +33,11 @@ jobs:
       - name: Set up env
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          touch .env.production
-          echo "VITE_BASE=${{ secrets.DEV_BASE || './' }}" >> .env.production
-          echo "VITE_APP_NAME=${{ secrets.DEV_APP_NAME || 'EasyShop App' }}" >> .env.production
-          echo "VITE_CORE_API_URL=${{ secrets.DEV_CORE_API_URL }}" >> .env.production
+          touch .env
+          echo "VITE_AWS_USER_POOL_ID=${{ secrets.DEV_USER_POOL_ID }}" >> .env
+          echo "VITE_AWS_REGION=${{ secrets.DEV_AWS_REGION }}" >> .env
+          echo "VITE_AWS_CLIENT_ID=${{ secrets.DEV_CLIENT_ID }}" >> .env
+          echo "VITE_AWS_CLIENT_SECRET=${{ secrets.DEV_CLIENT_SECRET }}" >> .env
 
       - name: Build project
         working-directory: ${{ env.WORKING_DIR }}
@@ -72,4 +73,4 @@ jobs:
         run: |
           ls -l
           aws s3 ls
-          aws s3 sync ./dist/ s3://app.dev.grp6asm3.com --follow-symlinks --delete
+          aws s3 sync ./dist/ s3://app.dev.grp6asm3.com --acl public-read --follow-symlinks --delete
