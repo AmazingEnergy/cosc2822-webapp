@@ -6,7 +6,6 @@ import {
     ForgotPasswordCommand,
     ConfirmForgotPasswordCommand
 } from "@aws-sdk/client-cognito-identity-provider";
-// import CryptoJS from "crypto-js";
 import * as CryptoJS from "crypto-js";
 
 
@@ -21,6 +20,63 @@ const CLIENT_SECRET = import.meta.env.VITE_AWS_CLIENT_SECRET;
 // console.log("Client Secret:", CLIENT_SECRET);
 
 const cognitoClient = new CognitoIdentityProviderClient({ region: REGION });
+
+export const parseIdToken = (idToken) => {
+    if (!idToken || idToken.trim() === "") {
+        throw new Error("idToken is empty or invalid.");
+    }
+
+    try {
+        // Split the token into header, payload, and signature
+        const parts = idToken.split('.');
+
+        // Ensure it's a valid token
+        if (parts.length !== 3) {
+            throw new Error("Invalid JWT token.");
+        }
+
+        // Base64 URL decode the payload (second part)
+        const base64Url = parts[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');  // Convert URL-safe Base64 to standard Base64
+
+        // Decode Base64 string to a UTF-8 string
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        // Parse the JSON payload
+        const decodedToken = JSON.parse(jsonPayload);
+
+        //console.log("Decoded token:", decodedToken);
+
+        // Extract user attributes
+        const userAttributes = {
+            username: decodedToken["cognito:username"],
+            email: decodedToken["email"],
+            //name: decodedToken["name"],  // Uncomment if you want to include name
+        };
+
+        // Check the user's groups (cognito:groups) to determine the role
+        const groups = decodedToken["cognito:groups"] || [];  // Ensure cognito:groups is an array
+        let role = "customer";  // Default role
+
+        // Assign role based on the group
+        if (groups.includes("admin")) {
+            role = "admin";
+        } else if (groups.includes("customer")) {
+            role = "customer";
+        }
+
+        // Add the role to user attributes
+        userAttributes.role = role;
+
+        return userAttributes;
+    } catch (error) {
+        console.error("Error parsing idToken:", error);
+        throw new Error("Failed to parse idToken.");
+    }
+};
+
 
 // Function to calculate SECRET_HASH
 export function calculateSecretHash(username, clientId = CLIENT_ID, clientSecret = CLIENT_SECRET) {
@@ -42,21 +98,33 @@ export function calculateSecretHash(username, clientId = CLIENT_ID, clientSecret
         SECRET_HASH: secretHash,
       },
     };
+  
     try {
       const command = new InitiateAuthCommand(params);
       const response = await cognitoClient.send(command);
-      return response.AuthenticationResult;
+  
+      // Save idToken to localStorage
+      const idToken = response.AuthenticationResult.IdToken;
+      localStorage.setItem('idToken', idToken);
+  
+      // Parse idToken to get user attributes
+      const userAttributes = parseIdToken(idToken); // Extract user attributes from the idToken
+  
+      // Return user data (can include tokens or just attributes)
+      return {
+        idToken,
+        user: userAttributes,
+      };
     } catch (error) {
       if (error.name === "NotAuthorizedException") {
         throw new Error("Incorrect username or password.");
       } else if (error.name === "UserNotFoundException") {
         throw new Error("User does not exist.");
-      } else if (error.name === "MFARequiredException") {
-        return { mfaRequired: true, session: error.Session };
       }
       throw error;
     }
   };
+  
   
   export const register = async (username, password, email) => {
     const secretHash = calculateSecretHash(username);

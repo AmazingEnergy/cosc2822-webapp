@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from "react-router-dom";
-import { login } from "../../../aws/cognitoService.js";
+
+import { login as cognitoLogin, parseIdToken } from "../../../aws/cognitoService.js";
+
 import './login.scss';
 
 const Login = () => {
-    const navigate = useNavigate();
+
+    const navigate = useNavigate(); 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -18,18 +21,26 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const result = await login(username, password);
-            setSuccess("You have logged in successfully!");
+            const result = await cognitoLogin(username, password);
+            
+            if (result && result.user) {
+                setSuccess("You have logged in successfully!");
 
-            // Example logic to redirect based on roles
-            const userRole = result?.role; // Update based on actual login response
-            const redirectPath = userRole === "admin" ? "/admin-dashboard" : "/homepage";
+                // Parse the idToken to get user attributes and role
+                const userAttributes = parseIdToken(result.idToken);
+                const userRole = userAttributes.role;
 
-            setTimeout(() => {
-                navigate(redirectPath);
-            }, 2000);
-
+                // Redirect based on role
+                const redirectPath = userRole === "admin" ? "/admin-dashboard" : "/";
+                setTimeout(() => {
+                    navigate(redirectPath);
+                }, 2000);
+            } else {
+                console.error("User data is missing in the result.");
+                setError("Failed to retrieve user data.");
+            }
         } catch (err) {
+            console.error("Error during login:", err);
             setError(err.message);
         } finally {
             setIsLoading(false);

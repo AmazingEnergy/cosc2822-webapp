@@ -1,6 +1,7 @@
 import './home.scss';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import useAuth from '../../hooks/useAuth.js';
 
 const Home = () => {
     // Mock data for products
@@ -16,14 +17,10 @@ const Home = () => {
     ];
 
     // User authentication state
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [activeProduct, setActiveProduct] = useState(null);
+    const { isAuthenticated } = useAuth();
     const [cart, setCart] = useState([]); // State for shopping cart
     const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility
-
-    const handleProductClick = (id) => {
-        setActiveProduct(id === activeProduct ? null : id); // Toggle active state
-    };
+    const navigate = useNavigate(); // Initialize useNavigate
 
     const handleAddToCart = (product) => {
         if (!isAuthenticated) {
@@ -50,6 +47,10 @@ const Home = () => {
         setIsModalOpen(false);
     };
 
+    const handleProductClick = (id) => {
+        navigate(`/product/${id}`); // Navigate to product detail page
+    };
+
     return (
         <div className="home-container">
             <h1 className="title mt-2">Our Products</h1>
@@ -58,8 +59,8 @@ const Home = () => {
                 {products.map((product) => (
                     <div
                         key={product.id}
-                        className={`product-card ${activeProduct === product.id ? 'active' : ''}`}
-                        onClick={() => handleProductClick(product.id)}
+                        className="product-card"
+                        onClick={() => handleProductClick(product.id)} // Navigate on click
                     >
                         <img
                             src={product.image}
@@ -87,7 +88,8 @@ const Home = () => {
             {/* Modal */}
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content flex flex-col space-y-5">
+                    <div className="modal-content flex flex-col space ```javascript
+                    -y-5">
                         <div className='flex justify-end items-end' onClick={handleCloseModal}>
                             <svg 
                                 xmlns="http://www.w3.org/2000/svg" 
@@ -102,7 +104,6 @@ const Home = () => {
                         <Link to="/login"> 
                             <button className="font-intel login-btn">Log In</button>
                         </Link>
-                       
                     </div>
                 </div>
             )}

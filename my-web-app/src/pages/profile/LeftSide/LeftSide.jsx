@@ -1,20 +1,50 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './leftside.scss';
+import { useNavigate } from "react-router-dom";
 
-const LeftSide = ({ firstname = 'User', profileImage = 'https://via.placeholder.com/150', setActiveSection}) => {
+const LeftSide = ({ setActiveSection }) => {
+    const [username, setUsername] = useState('User');
+    const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150');
+    const navigate = useNavigate();
+
+    // Fetch username and profile image from localStorage when the component mounts
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            setUsername(user.username || 'User');
+            setProfileImage(user.profileImage || 'https://via.placeholder.com/150');
+        }
+    }, []);
+
+    // Handle logout functionality
+    const handleLogout = () => {
+        localStorage.removeItem('idToken');
+        //localStorage.removeItem('userAttributes');
+        navigate("/"); // Redirect to homepage 
+    };
+
     return (
         <div className="left-side flex flex-col space-y-6 p-4">
             {/* Profile Section */}
             <div className="profile flex flex-row items-center space-x-4 bg-white p-4 shadow hover:shadow-lg transition-shadow duration-300">
                 <img
                     src={profileImage}
-                    alt={`${firstname}'s Profile`}
+                    alt={`${username}'s Profile`}
                     className="w-20 h-20 rounded-full object-cover"
                 />
                 <div>
                     <p className="font-intel text-lg text-gray-500">Hi,</p>
-                    <h1 className="font-akshar font-bold text-2xl text-gray-800">{firstname}</h1>
+                    <h1 className="font-akshar font-bold text-2xl text-gray-800">{username}</h1>
                 </div>
+            </div>
+
+            <div className="flex justify-end">
+                <button
+                    onClick={handleLogout}
+                    className="nav-item flex items-center space-x-4 p-4 px-6 bg-white shadow hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer"
+                >
+                    Logout
+                </button>
             </div>
 
             {/* Navigation Options */}
@@ -22,7 +52,7 @@ const LeftSide = ({ firstname = 'User', profileImage = 'https://via.placeholder.
                 {/* Personal Information */}
                 <div
                     onClick={() => setActiveSection(1)}
-                    className="nav-item flex items-center space-x-4 p-4 px-6 bg-white  shadow hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer"
+                    className="nav-item flex items-center space-x-4 p-4 px-6 bg-white shadow hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -32,7 +62,6 @@ const LeftSide = ({ firstname = 'User', profileImage = 'https://via.placeholder.
                         <path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z" />
                     </svg>
                     <p className="font-intel text-lg text-gray-700 hover:font-bold">My Personal Information</p>
-                
                 </div>
 
                 {/* Orders */}

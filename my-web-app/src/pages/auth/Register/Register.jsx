@@ -100,9 +100,10 @@ const Register = () => {
     return (
         <main className="bg-[#F9F1E7] w-full min-h-screen flex items-center justify-center">
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full">
-                <h1 className="text-[#D07373] text-3xl font-akshar text-center mb-6">EASYSTORE</h1>
                 {!isConfirming ? (
                     <form onSubmit={handleRegister}>
+                        <h1 className="text-[#D07373] text-3xl font-akshar text-center mb-6">EASYSTORE</h1>
+                
                         <div className="flex flex-row space-x-4">
                             <div className="mb-4 w-full">
                                 <label htmlFor="username" className="block text-sm font-intel text-[#333]">Username</label>
