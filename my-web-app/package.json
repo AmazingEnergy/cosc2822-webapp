@@ -19,6 +19,7 @@
     "@fontsource/akshar": "^5.1.0",
     "antd": "^5.22.3",
     "aws-amplify": "^6.10.3",
+    "crypto-js": "^4.2.0",
     "dom": "^0.0.3",
     "process": "^0.11.10",
     "react": "^18.3.1",
