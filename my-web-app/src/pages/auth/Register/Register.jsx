@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./register.scss";
 import { register, confirmSignUp } from '../../../aws/cognitoService.js';
 
@@ -147,6 +147,12 @@ const Register = () => {
                         >
                             Create new account
                         </button>
+
+                        <div className="mt-4 text-center flex justify-center items-center">
+                            <p className="text-sm font-intel mr-2">Already have an account?</p>
+                            <Link to="/login" className="font-intel text-[#337BEE] hover:underline">Login Now</Link>
+                        </div>
+
                         {error && <p className="text-red-500 mt-3">{error}</p>}
                         {success && <p className="text-green-500 mt-3" dangerouslySetInnerHTML={{ __html: success }} />}
                     </form>
