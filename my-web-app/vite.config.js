@@ -9,7 +9,8 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ['crypto-js'],
+      // Remove the 'crypto-js' from 'external' to allow it to be bundled correctly
+      external: [],
     },
   },
 });

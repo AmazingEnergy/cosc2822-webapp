@@ -6,7 +6,9 @@ import {
     ForgotPasswordCommand,
     ConfirmForgotPasswordCommand
 } from "@aws-sdk/client-cognito-identity-provider";
-import CryptoJS from "crypto-js";
+// import CryptoJS from "crypto-js";
+import * as CryptoJS from "crypto-js";
+
 
 const USER_POOL_ID = import.meta.env.VITE_AWS_USER_POOL_ID;
 const REGION = import.meta.env.VITE_AWS_REGION;
