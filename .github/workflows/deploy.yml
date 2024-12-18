@@ -74,3 +74,4 @@ jobs:
           ls -l
           aws s3 ls
           aws s3 sync ./dist/ s3://app.dev.grp6asm3.com --follow-symlinks --delete
+          aws cloudfront create-invalidation --distribution-id=${{ secrets.DEV_AWS_CLOUD_FRONT }} --paths /
