@@ -13,10 +13,10 @@ const REGION = import.meta.env.VITE_AWS_REGION;
 const CLIENT_ID = import.meta.env.VITE_AWS_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_AWS_CLIENT_SECRET;
 
-console.log("User  Pool ID:", USER_POOL_ID);
-console.log("Region:", REGION);
-console.log("Client ID:", CLIENT_ID);
-console.log("Client Secret:", CLIENT_SECRET);
+// console.log("User  Pool ID:", USER_POOL_ID);
+// console.log("Region:", REGION);
+// console.log("Client ID:", CLIENT_ID);
+// console.log("Client Secret:", CLIENT_SECRET);
 
 const cognitoClient = new CognitoIdentityProviderClient({ region: REGION });
 
