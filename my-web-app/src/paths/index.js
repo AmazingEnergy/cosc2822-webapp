@@ -7,5 +7,7 @@ export const PATH = {
   FORGOTPASSWORD: "/forgot-password",
   PRODUCTSADMIN: "/admin/products",
   CREATEPRODUCT: "/admin/create-product",
-  PRODUCT: "/product"
+  PRODUCT: "/product",
+  SHOPPINGCART: "/cart",
+  CHECKOUT: "/checkout"
 };
