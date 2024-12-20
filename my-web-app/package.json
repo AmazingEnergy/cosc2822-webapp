@@ -17,6 +17,7 @@
     "@aws-sdk/client-s3": "^3.709.0",
     "@fontsource-variable/inter": "^5.1.0",
     "@fontsource/akshar": "^5.1.0",
+    "@reduxjs/toolkit": "^2.5.0",
     "antd": "^5.22.3",
     "aws-amplify": "^6.10.3",
     "axios": "^1.7.9",
@@ -26,7 +27,7 @@
     "process": "^0.11.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-redux": "^9.1.2",
+    "react-redux": "^9.2.0",
     "react-router": "^7.0.2",
     "react-router-dom": "^7.0.2",
     "redux": "^5.0.1"

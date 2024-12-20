@@ -3,6 +3,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios'; 
 import useAuth from '../../hooks/useAuth.js';
 import './product.scss';
+import { useDispatch } from 'react-redux';
+import { addItem } from '../../redux/slices/cart.slice.js'; 
+import './product.scss';
 
 const ProductDetail = () => {
   const { skuId } = useParams();
@@ -16,6 +19,7 @@ const ProductDetail = () => {
   //const [selectedColor, setSelectedColor] = useState("Cosmic Black");
   const [mainImage, setMainImage] = useState("");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const fetchProductDetail = async () => {
     setLoading(true);
@@ -47,7 +51,18 @@ const ProductDetail = () => {
       setIsModalOpen(true);
       return;
     }
-    alert(`Added ${quantity} of "${product.name}" to cart!`);
+    const cartItem = {
+      skuId: product.skuId,
+      name: product.name,
+      price: product.price,
+      quantity,
+      image: product.imageUrls[0], // Assuming the first image is the product's image
+    };
+
+    // Dispatch addItem action to the Redux store
+    dispatch(addItem(cartItem));
+
+    //alert(`Added ${quantity} of "${product.name}" to cart!`);
   };
 
   const handleCloseModal = () => {
