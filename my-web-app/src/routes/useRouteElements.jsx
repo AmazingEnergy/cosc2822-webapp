@@ -192,7 +192,7 @@ const useRouteElements = () => {
         element: <MainLayout />,
         children: [
           {
-            path: ":id",
+            path: ":skuId",
             element: (
               <Suspense fallback={<Spinner />}>
                 <ProductDetailPage />

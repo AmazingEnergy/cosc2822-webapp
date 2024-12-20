@@ -79,7 +79,7 @@ const Login = () => {
                     </div>
 
                     <div className="text-right mb-3">
-                        <a href="/forgot-password" className="text-sm text-[#337BEE] hover:text-[#337BEE] hover:underline">Forgot your password?</a>
+                        <a href="/forgot-password" className="text-intel text-sm text-[#337BEE] hover:text-[#337BEE] hover:underline">Forgot your password?</a>
                     </div>
 
                     <button
@@ -92,7 +92,7 @@ const Login = () => {
 
                     <div className="mt-4 text-center flex justify-center items-center">
                         <p className="text-sm font-intel mr-2">Don't have an account yet?</p>
-                        <Link to="/register" className="font-intel text-[#337BEE] hover:underline">Register Now</Link>
+                        <Link to="/register" className="text-sm font-intel text-[#337BEE] hover:underline">Register Now</Link>
                     </div>
 
                     {error && <p className="text-red-500 mt-3">{error}</p>}

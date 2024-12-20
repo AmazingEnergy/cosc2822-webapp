@@ -151,7 +151,7 @@ const Register = () => {
 
                         <div className="mt-4 text-center flex justify-center items-center">
                             <p className="text-sm font-intel mr-2">Already have an account?</p>
-                            <Link to="/login" className="font-intel text-[#337BEE] hover:underline">Login Now</Link>
+                            <Link to="/login" className="text-sm font-intel text-[#337BEE] hover:underline">Login Now</Link>
                         </div>
 
                         {error && <p className="text-red-500 mt-3">{error}</p>}
