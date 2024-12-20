@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { addItem, removeItem, updateItemQuantity } from "../../../redux/slices/cart.slice.js";
+import './shoppingcart.scss';
 
 const ShoppingCart = () => {
   const dispatch = useDispatch();
@@ -28,7 +29,7 @@ const ShoppingCart = () => {
   return (
     <div className="w-full h-screen flex flex-col justify-center items-center bg-[#F5F5F5] p-4">
       {/* Header Outside the White Box */}
-      <h1 className="text-2xl font-bold text-center mb-6">My Shopping Cart</h1>
+      <h1 className="title mb-6">My Shopping Cart</h1>
 
       {/* White Container */}
       <div className="bg-white p-8 shadow-lg w-full max-w-4xl">

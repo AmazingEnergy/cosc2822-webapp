@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import LeftSide from './LeftSide';
 import RightSide from './RightSide';
 import './profile.scss';
@@ -17,13 +17,13 @@ const Profile = () => {
 
             {/* Content Layout */}
             <div className="flex flex-row items-start max-w-screen-lg mx-auto mt-4">
-                {/* Left Side - 30% */}
-                <div className="w-4/10">
+                {/* Left Side - 25% */}
+                <div className="w-1/4">
                     <LeftSide setActiveSection={setActiveSection}/>
                 </div>
 
-                {/* Right Side - 70% */}
-                <div className="w-6/10 ml-6">
+                {/* Right Side - 75% */}
+                <div className="w-3/4 ml-6">
                     <RightSide activeSection={activeSection}/>
                 </div>
             </div>

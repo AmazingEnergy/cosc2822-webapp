@@ -7,7 +7,6 @@ const LeftSide = ({ setActiveSection }) => {
     const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150');
     const navigate = useNavigate();
 
-    // Fetch username and profile image from localStorage when the component mounts
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user'));
         if (user) {
@@ -16,10 +15,8 @@ const LeftSide = ({ setActiveSection }) => {
         }
     }, []);
 
-    // Handle logout functionality
     const handleLogout = () => {
         localStorage.removeItem('idToken');
-        //localStorage.removeItem('userAttributes');
         navigate("/"); // Redirect to homepage 
     };
 
@@ -49,7 +46,6 @@ const LeftSide = ({ setActiveSection }) => {
 
             {/* Navigation Options */}
             <div className="navigation flex flex-col space-y-4">
-                {/* Personal Information */}
                 <div
                     onClick={() => setActiveSection(1)}
                     className="nav-item flex items-center space-x-4 p-4 px-6 bg-white shadow hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer"
@@ -64,7 +60,6 @@ const LeftSide = ({ setActiveSection }) => {
                     <p className="font-intel text-lg text-gray-700 hover:font-bold">My Personal Information</p>
                 </div>
 
-                {/* Orders */}
                 <div
                     onClick={() => setActiveSection(2)}
                     className="nav-item flex items-center space-x-4 p-4 px-6 bg-white shadow hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer"
