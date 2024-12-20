@@ -19,6 +19,7 @@
     "@fontsource/akshar": "^5.1.0",
     "antd": "^5.22.3",
     "aws-amplify": "^6.10.3",
+    "axios": "^1.7.9",
     "crypto-js": "^4.2.0",
     "dom": "^0.0.3",
     "jwt-decode": "^4.0.0",
