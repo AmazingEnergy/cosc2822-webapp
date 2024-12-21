@@ -28,7 +28,7 @@ const Home = () => {
     }, []);
 
     const handleProductClick = (skuId) => {
-        navigate(`/product/${skuId}`); // Navigate to product detail page
+        navigate(`/products/${skuId}`); // Navigate to product detail page
     };
 
     return (

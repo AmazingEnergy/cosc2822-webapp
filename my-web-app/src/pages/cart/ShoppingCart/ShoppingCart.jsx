@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { addItem, removeItem, updateItemQuantity } from "../../../redux/slices/cart.slice.js";
+import { addItemToCart, removeItemFromCart, updateItemQuantity } from "../../../redux/slices/cart.slice.js";
 import './shoppingcart.scss';
 
 const ShoppingCart = () => {
@@ -23,7 +23,7 @@ const ShoppingCart = () => {
 
   // Handle removing an item
   const handleRemoveItem = (skuId) => {
-    dispatch(removeItem(skuId));
+    dispatch(removeItemFromCart(skuId));
   };
 
   return (
@@ -111,7 +111,7 @@ const ShoppingCart = () => {
               Checkout
             </button>
           ) : (
-            <Link to="/cart/checkout">
+            <Link to="/carts/pay">
               <button className="w-48 bg-[#E89F71] text-white py-2 hover:bg-[#B55E5E] transition">
                 Checkout
               </button>
