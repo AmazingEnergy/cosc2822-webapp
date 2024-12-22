@@ -1,43 +1,47 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import AdminSideBar from "../../../components/AdminSideBar";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Products = () => {
   const navigate = useNavigate();
-  const products = [
-    {
-      id: 1,
-      name: "Satchel Hand Bag",
-      category: "Hand bag",
-      type: "Accessory",
-      price: 49.99,
-    },
-    {
-      id: 2,
-      name: "Beach Shirt Blouses",
-      category: "Top",
-      type: "Clothing",
-      price: 26.99,
-    },
-    {
-      id: 3,
-      name: "Bowknot Hat",
-      category: "Hat",
-      type: "Accessory",
-      price: 25.99,
-    },
-    {
-      id: 4,
-      name: "Long Dress",
-      category: "Dress",
-      type: "Clothing",
-      price: 37.99,
-    },
-  ];
+  const [products, setProducts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const fetchProduct = async () => {
+    await axios
+      .get("https://service.dev.grp6asm3.com/products")
+      .then((response) => {
+        const apiProducts = response.data.items.map((item, index) => ({
+          id: index + 1,
+          name: item.name,
+          category: item.category,
+          type: item.type,
+          price: item.price,
+          skuId: item.skuId,
+        }));
+        setProducts(apiProducts);
+      })
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+      });
+    
+  }
+  
+
+  useEffect(() => {
+    fetchProduct();
+  }, []);
+
 
   const handleCreateProduct = () => {
     navigate("/admin/create-product");
   };
+
+  // Filter products based on search query
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="flex h-screen">
@@ -49,8 +53,8 @@ const Products = () => {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold">Products</h2>
           <button
-            className="px-4 py-2 bg-[#D07373] text-white rounded border-[#D07373] border-solid hover:bg-[#E89F71]  "
-            onClick={() => handleCreateProduct()}
+            className="px-4 py-2 bg-[#D07373] text-white rounded border-[#D07373] border-solid hover:bg-[#E89F71]"
+            onClick={handleCreateProduct}
           >
             + Create Product
           </button>
@@ -61,6 +65,8 @@ const Products = () => {
           <input
             type="text"
             placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
@@ -78,12 +84,12 @@ const Products = () => {
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => (
+              {filteredProducts.map((product) => (
                 <tr key={product.id} className="border-t">
                   <td className="px-4 py-2">
                     <button
                       className="text-blue-500 hover:underline"
-                      onClick={() => navigate(`/admin/products/${product.id}`)}
+                      onClick={() => navigate(`/admin/products/${product.skuId}`)}
                     >
                       {product.name}
                     </button>
