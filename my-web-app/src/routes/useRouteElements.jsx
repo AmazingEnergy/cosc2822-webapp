@@ -20,8 +20,9 @@ const CreateProduct = lazy(() => import("../pages/admin/create-product"));
 const ProductDetailAdminPage = lazy(() => import("../pages/admin/product-details-admin"));
 const UpdateProductPage = lazy(() => import("../pages/admin/update-product"));
 const ProductDetailPage = lazy(() => import("../pages/product/ProductDetail"));
-const ShoppingCartPage = lazy(() => import("../pages/cart/ShoppingCart"));
-const CheckoutPage = lazy(() => import("../pages/checkout/Checkout"));
+
+const CartPage = lazy(() => import("../pages/cart/ShoppingCart"));
+const CheckoutPage = lazy(() => import("../pages/cart/Checkout"));
 
 //const HomePage = () => <div>Home Page</div>;
 //const NotFoundPage = () => <div>Not Found</div>;
@@ -52,45 +53,14 @@ const useRouteElements = () => {
         ],
       },
       {
-        path: PATH.PROFILE,
+        path: PATH.PRODUCT,
         element: <MainLayout />,
         children: [
           {
-            path: "",
-            index: true,
+            path: ":skuId",
             element: (
               <Suspense fallback={<Spinner />}>
-                <ProfilePage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.SHOPPINGCART,
-        element: <MainLayout />,
-        children: [
-          {
-            path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <ShoppingCartPage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.CHECKOUT,
-        element: <MainLayout />,
-        children: [
-          {
-            path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <CheckoutPage />
+                <ProductDetailPage />
               </Suspense>
             ),
           },
@@ -142,6 +112,45 @@ const useRouteElements = () => {
         ],
       },
       {
+        path: PATH.PROFILE,
+        element: <MainLayout />,
+        children: [
+          {
+            path: "",
+            index: true,
+            element: (
+              <Suspense fallback={<Spinner />}>
+                <ProfilePage />
+              </Suspense>
+            ),
+          },
+        ],
+      },
+      {
+        path: PATH.CART,
+        element: <MainLayout />,
+        children: [
+          {
+            //path: "",
+            index: true,
+            element: (
+              <Suspense fallback={<Spinner />}>
+                <CartPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "checkout",
+            index: true,
+            element: (
+              <Suspense fallback={<Spinner />}>
+                <CheckoutPage />
+              </Suspense>
+            ),
+          }
+        ],
+      },
+      {
         path: PATH.PRODUCTSADMIN,
         element: <MainLayout />,
         children: [
@@ -182,20 +191,6 @@ const useRouteElements = () => {
             element: (
               <Suspense fallback={<Spinner />}>
                 <CreateProduct />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.PRODUCT,
-        element: <MainLayout />,
-        children: [
-          {
-            path: ":skuId",
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <ProductDetailPage />
               </Suspense>
             ),
           },

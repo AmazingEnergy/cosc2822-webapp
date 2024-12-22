@@ -8,6 +8,5 @@ export const PATH = {
   PRODUCTSADMIN: "/admin/products",
   CREATEPRODUCT: "/admin/create-product",
   PRODUCT: "/product",
-  SHOPPINGCART: "/cart",
-  CHECKOUT: "/checkout"
+  CART: "/cart"
 };

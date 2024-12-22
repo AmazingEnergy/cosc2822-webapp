@@ -1,51 +1,70 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios'; 
 import useAuth from '../../hooks/useAuth.js';
+import './product.scss';
+import { useDispatch } from 'react-redux';
+import { addItem } from '../../redux/slices/cart.slice.js'; 
+import './product.scss';
 
 const ProductDetail = () => {
+  const { skuId } = useParams();
   const { isAuthenticated } = useAuth();
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility
-  const navigate = useNavigate(); // Initialize useNavigate
+  const [product, setProduct] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [selectedStorage, setSelectedStorage] = useState("8GB-256GB");
-  const [selectedColor, setSelectedColor] = useState("Cosmic Black");
-  const [mainImage, setMainImage] = useState("https://via.placeholder.com/400");
+  //const [selectedStorage, setSelectedStorage] = useState("8GB-256GB");
+  //const [selectedColor, setSelectedColor] = useState("Cosmic Black");
+  const [mainImage, setMainImage] = useState("");
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const product = {
-    skul: "SAMSUNG_GALACY_S23_ULTRA_COSMIC_BLACK_8GB_256GB",
-    name: "Samsung Galaxy S23 Ultra 8GB 256GB",
-    description: "The Samsung Galaxy S20 Ultra is the new flagship of the Galaxy S series, introduced by Samsung in early 2020. This is the most advanced version alongside the standard and Plus versions. The phone will feature incredible specifications, including a large battery, a 120Hz display refresh rate, and a 108MP primary camera. For a budget-friendly option with premium features, check out the Samsung S20 FE, currently at an attractive price.",
-    category: "Mobile",
-    type: "Device",
-    imageUrls: [
-      "https://via.placeholder.com/400",
-      "https://via.placeholder.com/300",
-      "https://via.placeholder.com/500",
-    ],
-    price: 100,
-    stockCode: "P00001002",
-    parentSkul: "SAMSUNG_GALACY_S20_ULTRA",
-    isActive: true,
-    specs: {
-      colors: ["Cosmic Black", "Gold", "Black", "Purple"],
-      storages: ["8GB-256GB", "12GB-512GB", "12GB-1TB"],
-    },
+  const fetchProductDetail = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`https://service.dev.grp6asm3.com/products/${skuId}`);
+      setProduct(response.data); 
+      setMainImage(response.data.imageUrls[0]); // Default to the first image
+    } catch (error) {
+      const errorMessage = error.response
+        ? error.response.data
+        : error.message || 'Something went wrong!';
+      console.error('Error fetching product detail:', errorMessage);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchProductDetail();
+  }, [skuId]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
+  if (!product) return <div>No product found</div>;
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
-      setIsModalOpen(true); // Open the modal if not authenticated
-      return; // Ensure to return here to prevent further execution
+      setIsModalOpen(true);
+      return;
     }
-    console.log(
-      `Added ${quantity} of ${product.name} (${selectedColor}, ${selectedStorage}) to cart.`
-    );
-    alert(
-      `Added ${quantity} of "${product.name}" (${selectedColor}, ${selectedStorage}) to cart!`
-    );
+    const cartItem = {
+      skuId: product.skuId,
+      name: product.name,
+      price: product.price,
+      quantity,
+      image: product.imageUrls[0], // Assuming the first image is the product's image
+    };
+
+    // Dispatch addItem action to the Redux store
+    dispatch(addItem(cartItem));
+
+    //alert(`Added ${quantity} of "${product.name}" to cart!`);
   };
 
-  // Function to handle closing the modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
@@ -53,11 +72,9 @@ const ProductDetail = () => {
   return (
     <div className="w-full h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full h-full grid grid-cols-1 md:grid-cols-2 bg-white p-8 gap-6">
-        {/* Product Images Section */}
         <div className="flex flex-col items-center gap-4">
-          {/* Main Image */}
           <img
-            src={mainImage} // Display selected main image
+            src={mainImage}
             alt="Main Product"
             className="w-full max-w-lg h-auto rounded-lg shadow-md object-cover transform hover:scale-105 transition-transform duration-300"
           />
@@ -69,70 +86,61 @@ const ProductDetail = () => {
                 key={index}
                 src={url}
                 alt={`Product Thumbnail ${index + 1}`}
-                onClick={() => setMainImage(url)} // Update main image on click
-                className={`w-16 h-16 rounded-lg shadow-md object-cover cursor-pointer transform transition-transform duration-300 ${
-                  mainImage === url ? "border-2 border-blue-500" : ""
-                }`}
+                onClick={() => setMainImage(url)}
+                className={`w-16 h-16 rounded-lg shadow-md object-cover cursor-pointer transform transition-transform duration-300 
+                  ${mainImage === url ? "border-2 border-blue-500" : ""}`}
               />
             ))}
           </div>
         </div>
 
-        {/* Product Details Section */}
         <div className="flex flex-col justify-start p-4">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+          <h1 className="text-4xl font-akshar font-bold text-gray-800 mb-4">
             {product.name}
           </h1>
-
-          <p className="text-2xl text-[#D07373] font-semibold mb-4">
-            ${product.price.toFixed(2)}
+          <p className="font-intel text-2xl text-[#D07373] font-semibold mb-4">
+            $ {product.price.toFixed(2)}
           </p>
 
-          {/* Specifications - Storage */}
+          {/* Description */}
+          <div className="text-black text-sm leading-relaxed mb-4">
+            <h3 className="text-base font-semibold mb-2">
+              Product Description:
+            </h3>
+            <p>{product.description}</p>
+          </div>
+
+          {/* Color selection
           <div className="mb-4">
-            <h3 className="text-base font-semibold mb-2">Select Storage:</h3>
+            <h3 className="text-base font-semibold mb-2">{product.specs.layer1Name}:</h3>
             <div className="grid grid-cols-3 gap-2">
-              {product.specs.storages.map((storage) => (
-                <button
-                  key={storage}
-                  onClick={() => setSelectedStorage(storage)}
-                  className={`p-2 text-sm border rounded-lg text-center cursor-pointer ${
-                    selectedStorage === storage
-                      ? "border-red-500 text-red-600 font-bold"
-                      : "border-gray-300 text-gray-700"
-                  }`}
-                >
-                  {storage}
-                </button>
-              ))}
+              <button
+                onClick={() => setSelectedColor(product.specs.layer1Value)}
+                className={`p-2 text-sm border rounded-lg text-center cursor-pointer ${selectedColor === product.specs.layer1Value ? "border-red-500 text-red-600 font-bold" : "border-gray-300 text-gray-700"}`}
+              >
+                {product.specs.layer1Value}
+              </button>
             </div>
-          </div>
+          </div> */}
 
-          {/* Specifications - Color */}
+          {/* Storage selection
           <div className="mb-4">
-            <h3 className="text-base font-semibold mb-2">Select Color:</h3>
-            <div className="grid grid-cols-4 gap-2">
-              {product.specs.colors.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setSelectedColor(color)}
-                  className={`p-2 text-sm border rounded-lg text-center cursor-pointer ${
-                    selectedColor === color
-                      ? "border-red-500 text-red-600 font-bold"
-                      : "border-gray-300 text-gray-700"
-                  }`}
-                >
-                  {color}
-                </button>
-              ))}
+            <h3 className="text-base font-semibold mb-2">{product.specs.layer2Name}:</h3>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => setSelectedStorage(product.specs.layer2Value)}
+                className={`p-2 text-sm border rounded-lg text-center cursor-pointer ${selectedStorage === product.specs.layer2Value ? "border-red-500 text-red-600 font-bold" : "border-gray-300 text-gray-700"}`}
+              >
+                {product.specs.layer2Value}
+              </button>
             </div>
-          </div>
+          </div> */}
 
-          {/* Quantity Selector */}
+          {/* Quantity selection */}
           <div className="flex items-center gap-4 mb-4">
             <label
               htmlFor="quantity"
-              className="text-gray-700 font-semibold text-sm"
+              className="text-black font-semibold text-sm"
             >
               Quantity:
             </label>
@@ -150,14 +158,6 @@ const ProductDetail = () => {
             </select>
           </div>
 
-          {/* Description */}
-          <div className="text-gray-600 text-sm leading-relaxed mb-4">
-            <h3 className="text-base font-semibold mb-2">
-              Product Description:
-            </h3>
-            <p>{product.description}</p>
-          </div>
-
           {/* Add to Cart Button */}
           <button
             onClick={handleAddToCart}
@@ -165,9 +165,11 @@ const ProductDetail = () => {
           >
             Add to Cart
           </button>
+        </div>
+      </div>
 
-          {/* Modal */}
-          {isModalOpen && (
+       {/* Modal */}
+       {isModalOpen && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg p-8 shadow-lg max-w-sm w-full">
               {/* Close Button */}
@@ -197,8 +199,6 @@ const ProductDetail = () => {
             </div>
           </div>
           )}
-        </div>
-      </div>
     </div>
   );
 };
