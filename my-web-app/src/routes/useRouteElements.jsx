@@ -155,7 +155,7 @@ const useRouteElements = () => {
             ),
           },
           {
-            path: ":id", // Dynamic parameter ":id"
+            path: ":skuId", // Dynamic parameter ":id"
             element: (
               <Suspense fallback={<Spinner />}>
                 <ProductDetailAdminPage />
@@ -163,7 +163,7 @@ const useRouteElements = () => {
             ),
           },
           {
-            path: "update/:id", // Dynamic parameter ":id"
+            path: "update/:skuId", // Dynamic parameter ":id"
             element: (
               <Suspense fallback={<Spinner />}>
                 <UpdateProductPage />
@@ -192,7 +192,7 @@ const useRouteElements = () => {
         element: <MainLayout />,
         children: [
           {
-            path: ":id",
+            path: ":skuId",
             element: (
               <Suspense fallback={<Spinner />}>
                 <ProductDetailPage />
