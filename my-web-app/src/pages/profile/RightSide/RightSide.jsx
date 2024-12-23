@@ -66,7 +66,7 @@ const RightSide = ({ activeSection }) => {
                 setLoadingOrders(true);
                 try {
                     const data = await listOrdersAPI(); // Use the new API function
-                    console.log("Orders fetched:", JSON.stringify(data, null, 2)); // Log the new orders
+                    //console.log("Orders fetched:", JSON.stringify(data, null, 2)); // Log the new orders
                     setOrders(data);
                 } catch (error) {
                     console.error('Error fetching orders:', error);
