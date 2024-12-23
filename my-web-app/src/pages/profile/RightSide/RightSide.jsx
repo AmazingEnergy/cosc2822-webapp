@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from '../../../hooks/useAuth.js';
+import { listOrdersAPI, cancelOrderAPI } from '../../../apis/order.api.js';
 import './rightside.scss';
 
 const OrderCard = ({ orderStatus, orderNo, orderDate }) => (
@@ -79,12 +80,11 @@ const RightSide = ({ activeSection }) => {
             const fetchOrders = async () => {
                 setLoadingOrders(true);
                 try {
-                    const response = await fetch('https://service.dev.grp6asm3.com/orders', {
-                        headers: { Authorization: `Bearer ${idToken}` },
-                    });
-                    if (!response.ok) throw new Error(`Failed to fetch orders: ${response.statusText}`);
+                    const data = await listOrdersAPI(); // Use the imported API function
+                    console.log("order=", JSON.stringify(data, null, 2)); // Pretty print with 2 spaces
 
-                    const data = await response.json();
+                    //console.table(data); // This works well for arrays of objects
+                    console.log("order=" + data);
                     setOrders(data);
                 } catch (error) {
                     console.error('Error fetching orders:', error);
@@ -230,6 +230,49 @@ const RightSide = ({ activeSection }) => {
         </div>
     );
 
+    // const renderOrders = () => (
+    //     <div className="w-full space-y-4">
+    //         <div className="bg-white p-4 shadow rounded-lg">
+    //             <h1 className="text-2xl font-semibold text-gray-800 text-center">My Orders</h1>
+    //         </div>
+    //         {loadingOrders ? (
+    //             <p className="text-lg text-gray-600 text-center">Loading orders...</p>
+    //         ) : orders.length > 0 ? (
+    //             <div className="space-y-4">
+    //                 {orders.map((order, index) => (
+    //                     <OrderCard
+    //                         key={index}
+    //                         orderStatus={order.orderStatus}
+    //                         orderNo={order.orderNo}
+    //                         orderDate={order.orderDate}
+    //                     />
+    //                 ))}
+    //             </div>
+    //         ) : (
+    //             <p className="text-lg text-gray-600 text-center">No orders found.</p>
+    //         )}
+    //     </div>
+    // );
+
+    const handleCancelOrder = async (orderId) => {
+        if (window.confirm("Are you sure you want to cancel this order?")) {
+            try {
+                // Call the cancel order API function
+                const response = await cancelOrderAPI(orderId);
+                alert('Order canceled successfully!');
+                // Optionally, refresh the orders list or update the state
+                setOrders((prevOrders) => 
+                    prevOrders.map(order => 
+                        order.id === orderId ? { ...order, status: 'canceled' } : order
+                    )
+                );
+            } catch (error) {
+                console.error('Error canceling order:', error);
+                alert('Failed to cancel order. Please try again later.');
+            }
+        }
+    };
+
     const renderOrders = () => (
         <div className="w-full space-y-4">
             <div className="bg-white p-4 shadow rounded-lg">
@@ -239,13 +282,38 @@ const RightSide = ({ activeSection }) => {
                 <p className="text-lg text-gray-600 text-center">Loading orders...</p>
             ) : orders.length > 0 ? (
                 <div className="space-y-4">
-                    {orders.map((order, index) => (
-                        <OrderCard
-                            key={index}
-                            orderStatus={order.orderStatus}
-                            orderNo={order.orderNo}
-                            orderDate={order.orderDate}
-                        />
+                    {orders.map((order) => (
+                        <div key={order.id} className="bg-white shadow-lg p-4 rounded-xl space-y-2">
+                            <div className="flex justify-between items-center">
+                                <p className="text-lg font-semibold text-gray-600">Order Number:</p>
+                                <p className="text-lg font-bold text-green-600">{order.orderNumber}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Order Status: <span className="font-medium">{order.status}</span></p>
+                                <p className="text-sm text-gray-500">Order Date: <span className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</span></p>
+                            </div>
+                            <hr className="my-2" />
+                            <h2 className="text-lg font-semibold">Order Items:</h2>
+                            <ul className="list-disc pl-5">
+                                {order.orderItems.map(item => (
+                                    <li key={item.id} className="text-sm text-gray-600">
+                                        {item.productName} - Quantity: {item.quantity} - Price: ${item.productPrice}
+                                    </li>
+                                ))}
+                            </ul>
+                            <div className="flex justify-between">
+                                <p className="font-bold">Total Amount: ${order.totalAmount}</p>
+                                {/* Cancel Order Button */}
+                                {order.status === 'new' && (
+                                    <button
+                                        onClick={() => handleCancelOrder(order.id)}
+                                        className="px-4 py-2 bg-gray-300 text-white rounded hover:border-red-500 transition duration-200"
+                                    >
+                                        Cancel Order
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     ))}
                 </div>
             ) : (
