@@ -143,7 +143,7 @@ const Checkout = () => {
 
           {/* Buttons */}
           <div className="flex gap-4 mt-8">
-            <Link to="/cart">
+            <Link to="/carts">
               <button className="border border-[#E89F71] px-6 py-2 text-gray-600 hover:bg-gray-200">
                 Cancel
               </button>

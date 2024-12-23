@@ -140,7 +140,7 @@ const useRouteElements = () => {
             ),
           },
           {
-            path: "checkout",
+            path: "pay",
             index: true,
             element: (
               <Suspense fallback={<Spinner />}>

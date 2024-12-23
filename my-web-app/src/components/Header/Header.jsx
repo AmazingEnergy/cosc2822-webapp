@@ -36,7 +36,7 @@ const Header = () => {
                     // Render Cart, Profile, and Logout buttons for logged-in users
                     <>
                         <Link
-                            to="/cart"
+                            to="/carts"
                             className="px-2 py-2"
                         >
                             <svg
