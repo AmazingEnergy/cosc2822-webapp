@@ -59,6 +59,138 @@ const RightSide = ({ activeSection }) => {
         fetchUserProfile();
     }, [idToken]);
 
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch('https://service.dev.grp6asm3.com/update-profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({
+                    email: profile.email,
+                    firstname: profile.firstname,
+                    lastname: profile.lastname,
+                    password: profile.password,
+                }),
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Failed to update profile: ${response.statusText}`);
+            }
+    
+            const data = await response.json();
+            setProfile({
+                ...profile,
+                firstname: data.firstname || 'Not Provided',
+                lastname: data.lastname || 'Not Provided',
+                username: data.username || 'Not Provided',
+                email: data.email || profile.email,
+                password: '', // Clear password field
+            });
+            alert('Profile updated successfully!');
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            alert('Failed to update profile. Please try again later.');
+        }
+    };
+    
+    const renderPersonalInfo = () => (
+        <div className="w-full bg-white shadow-xl p-6 space-y-6 rounded-lg max-w-5xl mx-auto">
+            <h1 className="text-2xl font-semibold text-gray-800 text-center">My Personal Information</h1>
+            {loadingProfile ? (
+                <p className="text-lg text-gray-600 text-center">Loading profile...</p>
+            ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Username */}
+                    <div>
+                        <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            placeholder="Enter your username"
+                            value={profile.username}
+                            onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                        />
+                    </div>
+    
+                    {/* Firstname and Lastname */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="firstname" className="block text-sm font-medium text-gray-700">Firstname</label>
+                            <input
+                                type="text"
+                                id="firstname"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                placeholder="Enter your firstname"
+                                value={profile.firstname}
+                                onChange={(e) => setProfile({ ...profile, firstname: e.target.value })}
+                            />
+                        </div>
+    
+                        <div>
+                            <label htmlFor="lastname" className="block text-sm font-medium text-gray-700">Lastname</label>
+                            <input
+                                type="text"
+                                id="lastname"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                placeholder="Enter your lastname"
+                                value={profile.lastname}
+                                onChange={(e) => setProfile({ ...profile, lastname: e.target.value })}
+                            />
+                        </div>
+                    </div>
+    
+                    {/* Email */}
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            placeholder="Enter your email"
+                            value={profile.email}
+                            onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                        />
+                    </div>
+    
+                    {/* Password */}
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            placeholder="Enter your password"
+                            value={profile.password}
+                            onChange={(e) => setProfile({ ...profile, password: e.target.value })}
+                        />
+                    </div>
+    
+                    {/* Action Buttons */}
+                    <div className="flex space-x-4">
+                        <button
+                            type="button"
+                            onClick={() => setProfile({ ...profile, password: '' })}
+                            className="w-full py-3 font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition duration-200"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="w-full py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-200"
+                        >
+                            Save
+                        </button>
+                    </div>
+                </form>
+    
+            )}
+        </div>
+    );
+
     useEffect(() => {
         // Fetch new orders when activeSection changes to 2
         if (activeSection === 2 && idToken) {
