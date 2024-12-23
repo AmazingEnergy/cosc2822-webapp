@@ -1,29 +1,38 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { addItemToCart, removeItemFromCart, updateItemQuantity } from "../../../redux/slices/cart.slice.js";
+import { loadCartFromAPI, removeItemFromCart, updateItemQuantity } from "../../../redux/slices/cart.slice.js";
 import './shoppingcart.scss';
 
 const ShoppingCart = () => {
   const dispatch = useDispatch();
 
   // Get cart items from Redux store
-  const cartItems = useSelector((state) => state.cart.items);
+  const cartItems = useSelector((state) => state.cart.items || []);
 
-  // Calculate total price
-  const totalPrice = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
+  // Retrieve cartId from localStorage
+  const cartId = localStorage.getItem("cartId"); // Assuming cartId is stored in localStorage
+
+  useEffect(() => {
+    if (cartId) {
+      dispatch(loadCartFromAPI()); 
+    }
+  }, [dispatch, cartId]);
+
+  const totalPrice = cartItems.reduce((total, item) => {
+    const price = parseFloat(item.productPrice) || 0;
+    const quantity = parseInt(item.quantity, 10) || 0;
+    return total + price * quantity;
+  }, 0);
 
   // Handle updating quantity of a specific item
-  const handleUpdateQuantity = (skuId, change) => {
-    dispatch(updateItemQuantity({ skuId, change }));
+  const handleUpdateQuantity = (cartId, skuId, change) => {
+    dispatch(updateItemQuantity({cartId, skuId, change }));
   };
 
   // Handle removing an item
   const handleRemoveItem = (skuId) => {
-    dispatch(removeItemFromCart(skuId));
+    dispatch(removeItemFromCart({cartId, itemId: skuId}));
   };
 
   return (
@@ -35,7 +44,7 @@ const ShoppingCart = () => {
       <div className="bg-white p-8 shadow-lg w-full max-w-4xl">
         {/* Table Header */}
         <div className="grid grid-cols-5 font-semibold pb-2 border-b">
-          <div className="col-span-2">Description</div>
+          <div className="col-span-2">Product Name</div>
           <div>Quantity</div>
           <div>Remove</div>
           <div className="text-right">Price</div>
@@ -52,14 +61,14 @@ const ShoppingCart = () => {
               key={item.skuId}
               className="grid grid-cols-5 items-center gap-4 py-4 border-b"
             >
-              {/* Description */}
+              {/* Product Name */}
               <div className="col-span-2 flex items-center gap-4">
-                <img
+                {/* <img
                   src={item.image}
                   alt={item.name}
                   className="w-16 h-16 bg-gray-200"
-                />
-                <span className="text-gray-700">{item.name}</span>
+                /> */}
+                <span className="text-gray-700">{item.productName}</span>
               </div>
 
               {/* Quantity Selector */}
@@ -88,7 +97,7 @@ const ShoppingCart = () => {
               </button>
 
               {/* Price */}
-              <div className="text-right font-semibold">${item.price}</div>
+              <div className="text-right font-semibold">${(parseFloat(item.productPrice) * item.quantity).toFixed(2)}</div>
             </div>
           ))
         )}
@@ -97,7 +106,7 @@ const ShoppingCart = () => {
         {cartItems.length > 0 && (
           <div className="flex justify-end align-middle space-x-4 items-center mt-6">
             <h2 className="text-lg font-semibold">Total</h2>
-            <span className="text-xl font-bold">${totalPrice}</span>
+            <span className="text-xl font-bold">${totalPrice.toFixed(2)}</span>
           </div>
         )}
 

@@ -4,19 +4,17 @@ import axios from 'axios';
 import useAuth from '../../hooks/useAuth.js';
 import './product.scss';
 import { useDispatch } from 'react-redux';
-import { addItem } from '../../redux/slices/cart.slice.js'; 
+import { addItemToCart } from '../../redux/slices/cart.slice.js'; 
 import './product.scss';
 
 const ProductDetail = () => {
-  const { skuId } = useParams();
+  const { skuId } = useParams(); // skuId from the URL params
   const { isAuthenticated } = useAuth();
   const [product, setProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  //const [selectedStorage, setSelectedStorage] = useState("8GB-256GB");
-  //const [selectedColor, setSelectedColor] = useState("Cosmic Black");
   const [mainImage, setMainImage] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -51,18 +49,19 @@ const ProductDetail = () => {
       setIsModalOpen(true);
       return;
     }
-    const cartItem = {
-      skuId: product.skuId,
+
+    const currentCartId = localStorage.getItem('cartId');
+
+    const newItem = {
+      skuId, 
       name: product.name,
-      price: product.price,
+      stockCode: product.stockCode,
       quantity,
-      image: product.imageUrls[0], // Assuming the first image is the product's image
+      price: product.price,
     };
 
-    // Dispatch addItem action to the Redux store
-    dispatch(addItem(cartItem));
-
-    //alert(`Added ${quantity} of "${product.name}" to cart!`);
+    // Dispatch addItemToCart action to the Redux store
+    dispatch(addItemToCart({ cartId: currentCartId, newItem }));
   };
 
   const handleCloseModal = () => {
@@ -109,32 +108,6 @@ const ProductDetail = () => {
             </h3>
             <p>{product.description}</p>
           </div>
-
-          {/* Color selection
-          <div className="mb-4">
-            <h3 className="text-base font-semibold mb-2">{product.specs.layer1Name}:</h3>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => setSelectedColor(product.specs.layer1Value)}
-                className={`p-2 text-sm border rounded-lg text-center cursor-pointer ${selectedColor === product.specs.layer1Value ? "border-red-500 text-red-600 font-bold" : "border-gray-300 text-gray-700"}`}
-              >
-                {product.specs.layer1Value}
-              </button>
-            </div>
-          </div> */}
-
-          {/* Storage selection
-          <div className="mb-4">
-            <h3 className="text-base font-semibold mb-2">{product.specs.layer2Name}:</h3>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => setSelectedStorage(product.specs.layer2Value)}
-                className={`p-2 text-sm border rounded-lg text-center cursor-pointer ${selectedStorage === product.specs.layer2Value ? "border-red-500 text-red-600 font-bold" : "border-gray-300 text-gray-700"}`}
-              >
-                {product.specs.layer2Value}
-              </button>
-            </div>
-          </div> */}
 
           {/* Quantity selection */}
           <div className="flex items-center gap-4 mb-4">

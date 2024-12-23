@@ -13,7 +13,7 @@ const Home = () => {
         setLoading(true);
         try {
             const response = await axios.get('https://service.dev.grp6asm3.com/products');
-            console.log('API Response:', response.data);
+            //console.log('API Response:', response.data);
             setProducts(response.data.items || []); // Fallback to empty array if no items
         } catch (error) {
             console.error('Error fetching products:', error.response ? error.response.data : error.message);

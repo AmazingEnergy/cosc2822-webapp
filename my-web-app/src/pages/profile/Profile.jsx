@@ -4,7 +4,7 @@ import RightSide from './RightSide';
 import './profile.scss';
 
 const Profile = () => {
-    const [activeSection, setActiveSection] = useState(null);
+    const [activeSection, setActiveSection] = useState(1);
 
     return (
         <div className="overflow-x-hidden bg-[#F5F5F5] min-h-screen">

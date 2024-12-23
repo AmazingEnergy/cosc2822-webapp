@@ -16,7 +16,12 @@ const Checkout = () => {
 
   const cartItems = useSelector((state) => state.cart.items);
 
-  const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  
+  const totalPrice = cartItems.reduce((total, item) => {
+    const price = parseFloat(item.productPrice) || 0;
+    const quantity = parseInt(item.quantity, 10) || 0;
+    return total + price * quantity;
+  }, 0);
 
   // Validate the form
   const validateForm = () => {
@@ -168,7 +173,7 @@ const Checkout = () => {
                   <p className="text-sm">{item.name}</p>
                 </div>
                 <span className="font-semibold text-gray-800">
-                  ${item.price * item.quantity}
+                  ${(parseFloat(item.productPrice) * item.quantity).toFixed(2)}
                 </span>
               </div>
             ))
@@ -185,7 +190,7 @@ const Checkout = () => {
           {/* Total Row */}
           <div className="flex justify-between pt-4 border-t">
             <span className="font-semibold text-lg">Total</span>
-            <span className="font-bold text-lg">${totalPrice}</span>
+            <span className="font-bold text-lg">${totalPrice.toFixed(2)}</span>
           </div>
         </div>
       </div>

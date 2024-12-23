@@ -1,33 +1,191 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://service.dev.grp6asm3.com/carts';
+const API_BASE_URL = 'https://service.dev.grp6asm3.com';
 
+
+/**
+ * Helper function to get the auth headers.
+ * @returns {Object} - Authorization headers
+ */
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('idToken');
+  if (!token) {
+    throw new Error('Authorization token is missing');
+  }
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
+/**
+ * Get cart.
+ * @returns {Promise<Object>} - API response data containing cart details.
+ */
+export const getCartAPI = async (cartId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/carts/${cartId}`, { headers: getAuthHeaders() });
+    return response.data; 
+  } catch (error) {
+    console.error('Error fetching cart data:', error);
+    throw error;  // Rethrow the error to be handled by Redux Thunk or wherever it's used
+  }
+};
+
+/**
+ * Creates a new cart.
+ * @returns {Promise<Object>} - API response data containing cart details.
+ */
+export const createCart = async () => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/carts`, {}, { headers: getAuthHeaders() });
+
+    // Log the entire response data to inspect its structure
+    //console.log('API Response:', response.data);
+
+    // Extract the cartId from the response (using `id` as cartId)
+    const cartId = response.data.id;
+
+    if (cartId) {
+      // Ensure cartId is a string before saving it to localStorage
+      const cartIdString = String(cartId);
+
+      // Store the cartId in localStorage
+      localStorage.setItem('cartId', cartIdString);
+    } else {
+      console.error('Error: cartId is missing or not in the expected format');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error creating cart:', error.response || error.message || error);
+    throw new Error('Unable to create cart. Please try again.');
+  }
+};
+
+/**
+ * Adds a new item to the cart. If the cart doesn't exist, it creates a new cart first.
+ * @param {string|null} cartId - The ID of the cart. Pass `null` if cart ID is unknown.
+ * @param {Object} newItem - The item details to add to the cart.
+ * @returns {Promise<Object>} - API response data.
+ */
 export const addItemToCartAPI = async (cartId, newItem) => {
-  const response = await axios.post(`${API_BASE_URL}/${cartId}/addItem`, newItem);
-  return response.data;
+  try {
+    // Check if cartId exists in localStorage
+    cartId = localStorage.getItem('cartId');
+    if (!cartId) {
+      console.log('Cart does not exist. Creating a new cart...');
+      const newCart = await createCart(); // Create a new cart if cartId doesn't exist
+      cartId = newCart.id;  // Set the new cartId
+      console.log('New cart created with ID:', cartId);
+    }
+
+    // Log the cartId before making the request to ensure it's valid
+    //console.log('Using cartId:', cartId);
+
+    // Add item to the cart using the API
+    const response = await axios.post(
+      `${API_BASE_URL}/carts/${cartId}/addItem`,
+      {
+        skuId: newItem.skuId,
+        productName: newItem.name,
+        stockCode: newItem.stockCode,
+        quantity: newItem.quantity,
+        productPrice: newItem.price,
+      },
+      { headers: getAuthHeaders() }
+    );
+    // Check if response.data is defined
+    if (!response.data) {
+      throw new Error('No data returned from API');
+    }
+
+    // If necessary, update the cartId in localStorage
+    if (response.data.cartId) {
+      localStorage.setItem('cartId', response.data.cartId);
+    }
+
+    return response.data; // Return the response data if needed
+
+  } catch (error) {
+    console.error('Error adding item to cart:', error.response?.data || error.message || error);
+    throw new Error('Unable to add item to the cart. Please try again.');
+  }
 };
 
+/**
+ * Removes an item from the cart.
+ * @param {string} cartId - The ID of the cart.
+ * @param {string} itemId - The SKU ID of the item to remove.
+ * @returns {Promise<Object>} - API response data.
+ */
 export const removeItemFromCartAPI = async (cartId, itemId) => {
-  const response = await axios.delete(`${API_BASE_URL}/${cartId}/removeItem`, {
-    data: { skuId: itemId },
-  });
-  return response.data;
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/carts/${cartId}/removeItem`, {
+      data: { skuId: itemId },
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error removing item from cart (cartId: ${cartId}, itemId: ${itemId}):`, error.response || error.message || error);
+    throw new Error('Unable to remove item from cart. Please try again.');
+  }
 };
 
+/**
+ * Updates the quantity of an item in the cart.
+ * @param {string} cartId - The ID of the cart.
+ * @param {string} skuId - The SKU ID of the item to update.
+ * @param {number} change - The quantity change (+/-).
+ * @returns {Promise<Object>} - API response data.
+ */
 export const updateItemQuantityAPI = async (cartId, skuId, change) => {
-  const response = await axios.put(`${API_BASE_URL}/${cartId}/updateItem`, {
-    skuId,
-    change,
-  });
-  return response.data;
+  try {
+    const response = await axios.put(`${API_BASE_URL}/carts/${cartId}/updateItem`, {
+      skuId,
+      change,
+    }, { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating item quantity (cartId: ${cartId}, skuId: ${skuId}):`, error.response || error.message || error);
+    throw new Error('Unable to update item quantity. Please try again.');
+  }
 };
 
+/**
+ * Processes payment for the cart.
+ * @param {string} cartId - The ID of the cart.
+ * @param {Object} paymentDetails - The payment details (e.g., card information).
+ * @returns {Promise<Object>} - API response data.
+ */
 export const payCartAPI = async (cartId, paymentDetails) => {
-  const response = await axios.post(`${API_BASE_URL}/${cartId}/pay`, paymentDetails);
-  return response.data;
+  try {
+    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/pay`, paymentDetails, {
+      headers: getAuthHeaders(),
+    });
+    localStorage.removeItem('cartId'); // Clear cartId after payment
+    console.log('Payment processed successfully');
+    return response.data;
+  } catch (error) {
+    console.error(`Error processing payment for cartId: ${cartId}:`, error.response || error.message || error);
+    throw new Error('Unable to process payment. Please try again.');
+  }
 };
 
+/**
+ * Submits the cart for processing.
+ * @param {string} cartId - The ID of the cart.
+ * @returns {Promise<Object>} - API response data.
+ */
 export const submitCartAPI = async (cartId) => {
-  const response = await axios.post(`${API_BASE_URL}/${cartId}/submit`);
-  return response.data;
+  try {
+    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/submit`, {}, {
+      headers: getAuthHeaders(),
+    });
+    localStorage.removeItem('cartId'); // Clear cartId after submission
+    console.log('Cart submitted successfully');
+    return response.data;
+  } catch (error) {
+    console.error(`Error submitting cart for cartId: ${cartId}:`, error.response || error.message || error);
+    throw new Error('Unable to submit cart. Please try again.');
+  }
 };
