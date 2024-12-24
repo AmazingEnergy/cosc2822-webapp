@@ -1,34 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
-import { clearCart } from '../../../redux/slices/cart.slice.js'; 
+import { loadCartFromAPI, submitCart, clearCart } from '../../../redux/slices/cart.slice.js';
+
 const Checkout = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [address, setAddress] = useState('');
-  const [errors, setErrors] = useState({}); // Store individual error messages
+  const [contactPhone, setContactPhone] = useState('');
+  const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(true);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const cartItems = useSelector((state) => state.cart.items);
+  const cartItems = useSelector((state) => {
+    //console.log("Current cart items:", state.cart.items); // Log current items
+    return state.cart.items || [];
+  });
 
-  
+  const cartId = localStorage.getItem("cartId");
+
+  useEffect(() => {
+    if (cartId) {
+      dispatch(loadCartFromAPI());
+    }
+  }, [dispatch, cartId]);
+
   const totalPrice = cartItems.reduce((total, item) => {
     const price = parseFloat(item.productPrice) || 0;
     const quantity = parseInt(item.quantity, 10) || 0;
     return total + price * quantity;
   }, 0);
 
-  // Validate the form
   const validateForm = () => {
     let errorMessages = {};
     let isValid = true;
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
       isValid = false;
@@ -51,28 +61,52 @@ const Checkout = () => {
       errorMessages.address = "Address is required";
     }
 
+    if (!contactPhone) { // Validate contact phone
+      isValid = false;
+      errorMessages.phone = "Phone number is required";
+    }
+
     setErrors(errorMessages);
     setIsFormValid(isValid);
     return isValid;
   };
 
-  // Function to open the modal
-  const handleConfirmation = () => {
+  const handleConfirmation = async () => {
     if (validateForm()) {
-      setIsModalOpen(true);
-      
-      // Clear the cart and localStorage after successful checkout
-      localStorage.removeItem("cart"); // Remove cart from localStorage
-      dispatch(clearCart()); // Dispatch action to clear the Redux cart store
+      if (cartId) {
+        const contactName = `${firstName} ${lastName}`;
+        const payload = { 
+          cartId, 
+          contactName, 
+          email, 
+          address,
+          contactPhone
+        };
+        console.log('Submitting cart with payload:', payload); // Log the payload
+  
+        try {
+          await dispatch(submitCart(payload)).unwrap();
+          setIsModalOpen(true);
+          localStorage.removeItem("cartId");
+          dispatch(clearCart());
+        } catch (error) {
+          console.error('Error submitting cart:', error);
+        }
+      } else {
+        console.error("cartId is not available");
+      }
     }
   };
 
-  // Function to close the modal and redirect
   const handleContinueShopping = () => {
     setIsModalOpen(false);
     navigate("/"); // Navigate back to the homepage
   };
 
+  const handleViewOrder = () => {
+    setIsModalOpen(false);
+    navigate("/profile"); 
+  };
   return (
     <div className="w-full min-h-screen flex justify-center items-center bg-[#F5F5F5] p-4">
       <div className="flex w-full max-w-6xl bg-white shadow-lg rounded-lg border border-solid overflow-hidden">
@@ -81,14 +115,24 @@ const Checkout = () => {
           {/* Contact Section */}
           <div className="mb-6">
             <h2 className="text-lg font-bold mb-2">Contact</h2>
+            <div className="grid grid-cols-2 gap-4 mb-4">
             <input
-              type="text"
-              placeholder="Email"
-              className={`w-full border ${errors.email ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                type="text"
+                placeholder="Email"
+                className={`w -full border ${errors.email ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+              <input
+                type="text"
+                placeholder="Phone number"
+                className={`w-full border ${errors.phone ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
+                value={contactPhone} // Update value to contactPhone
+                onChange={(e) => setContactPhone(e.target.value)} // Update state on change
+              />
+              {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+            </div>
           </div>
 
           {/* Delivery Section */}
@@ -100,7 +144,7 @@ const Checkout = () => {
                 placeholder="First name"
                 className={`border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)} 
+                onChange={(e) => setFirstName(e.target.value)}
               />
               {errors.firstName && <p className="text-red-500 text-sm">{errors.firstName}</p>}
 
@@ -109,7 +153,7 @@ const Checkout = () => {
                 placeholder="Last name"
                 className={`border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)} 
+                onChange={(e) => setLastName(e.target.value)}
               />
               {errors.lastName && <p className="text-red-500 text-sm">{errors.lastName}</p>}
 
@@ -118,7 +162,7 @@ const Checkout = () => {
                 placeholder="Address"
                 className={`w-full border ${errors.address ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md col-span-2`}
                 value={address}
-                onChange={(e) => setAddress(e.target.value)} 
+                onChange={(e) => setAddress(e.target.value)}
               />
               {errors.address && <p className="text-red-500 text-sm">{errors.address}</p>}
             </div>
@@ -198,34 +242,44 @@ const Checkout = () => {
       {/* Modal */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 bg-[#F9F1E7] flex justify-center items-center z-50"
-          role="dialog"
-          aria-labelledby="modalTitle"
-          aria-hidden={!isModalOpen}
-        >
-          <div className="bg-white p-8 rounded-lg w-[718px] h-[586px] flex flex-col items-center justify-center space-y-4">
-            <div>
-              <img
-                className="h-[137px] w-[137px]"
-                src="/assets/check.png" alt="Checkmark Icon" />
-            </div>
-            <h2
-              id="modalTitle"
-              className="text-2xl text-[#008080] font-bold mb-4"
+        className="fixed inset-0 bg-[#F9F1E7] bg-opacity-80 flex justify-center items-center z-50 transition-opacity duration-300"
+        role="dialog"
+        aria-labelledby="modalTitle"
+        aria-hidden={!isModalOpen}
+      >
+        <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md flex flex-col items-center justify-center space-y-6 transform transition-transform duration-300">
+          <div>
+            <img
+              className="h-24 w-24"
+              src="/assets/check.png" 
+              alt="Checkmark Icon" 
+            />
+          </div>
+          <h2
+            id="modalTitle"
+            className="text-2xl text-[#008080] font-bold text-center"
+          >
+            Thank You For Your Order
+          </h2>
+          <p className="text-center text-gray-700">
+            Your order has been successfully placed. You can continue shopping or review your orders.
+          </p>
+          <div className="flex flex-row space-x-4">
+            <button
+              onClick={handleContinueShopping}
+              className="bg-[#E89F71] text-white px-6 py-2 rounded-md hover:bg-orange-500 transition duration-200"
             >
-              Thank You For Your Order
-            </h2>
-            <p className="mb-6">Your order has been successfully placed. You can continue shopping or review your orders.</p>
-            <div className="pt-8">
-              <button
-                onClick={handleContinueShopping}
-                className="bg-[#E89F71]  text-white px-6 py-2 hover:bg-orange-500"
-              >
-                Continue Shopping
-              </button>
-            </div>
+              Continue Shopping
+            </button>
+            <button
+              onClick={handleViewOrder}
+              className="bg-[#baa190] text-gray-600 px-6 py-2 rounded-md hover:bg-[#d1b7a0] transition duration-200"
+            >
+              View Order
+            </button>
           </div>
         </div>
+      </div>
       )}
     </div>
   );

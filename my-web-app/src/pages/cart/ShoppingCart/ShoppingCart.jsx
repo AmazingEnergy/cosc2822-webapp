@@ -1,23 +1,30 @@
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { loadCartFromAPI, removeItemFromCart, updateItemQuantity } from "../../../redux/slices/cart.slice.js";
+import { loadCartFromAPI, removeItemFromCart, updateItemQuantity} from "../../../redux/slices/cart.slice.js";
 import './shoppingcart.scss';
 
 const ShoppingCart = () => {
   const dispatch = useDispatch();
 
   // Get cart items from Redux store
-  const cartItems = useSelector((state) => state.cart.items || []);
+  const cartItems = useSelector((state) => {
+    //console.log("Redux State:", state.cart); // Log the entire cart state
+    return state.cart.items || [];
+  });
+
+  // Log the cart items
+  //console.log("cartItems:", cartItems); // Log the entire array
 
   // Retrieve cartId from localStorage
-  const cartId = localStorage.getItem("cartId"); // Assuming cartId is stored in localStorage
+  const cartId = localStorage.getItem("cartId");
 
   useEffect(() => {
     if (cartId) {
-      dispatch(loadCartFromAPI()); 
+      dispatch(loadCartFromAPI());
     }
   }, [dispatch, cartId]);
+
 
   const totalPrice = cartItems.reduce((total, item) => {
     const price = parseFloat(item.productPrice) || 0;
@@ -25,14 +32,45 @@ const ShoppingCart = () => {
     return total + price * quantity;
   }, 0);
 
-  // Handle updating quantity of a specific item
-  const handleUpdateQuantity = (cartId, skuId, change) => {
-    dispatch(updateItemQuantity({cartId, skuId, change }));
+  // Define handleUpdateQuantity function
+  const handleUpdateQuantity = (skuId, change) => {
+    if (cartId) {
+      const item = cartItems.find(item => item.skuId === skuId);
+      if (item) {
+        const newQuantity = item.quantity + change;
+
+        if (newQuantity >= 0) {
+          // Optimistically update the state
+          dispatch(updateItemQuantity({ cartId, skuId, quantity: newQuantity }));
+
+          // Call the API to update the quantity
+          dispatch(updateItemQuantity({ cartId, skuId, quantity: newQuantity }));
+        } else {
+          console.error("Quantity cannot be negative");
+        }
+      } else {
+        console.error("Item not found in cart");
+      }
+    } else {
+      console.error("cartId is not available");
+    }
   };
 
   // Handle removing an item
   const handleRemoveItem = (skuId) => {
-    dispatch(removeItemFromCart({cartId, itemId: skuId}));
+    if (cartId) {
+      // Optimistically remove the item from the state
+      const updatedItems = cartItems.filter(item => item.skuId !== skuId);
+      dispatch(removeItemFromCart({ cartId, itemId: skuId }));
+
+      // Update the state immediately
+      dispatch({
+        type: 'cart/removeItemOptimistically',
+        payload: updatedItems,
+      });
+    } else {
+      console.error("cartId is not available");
+    }
   };
 
   return (
@@ -120,7 +158,7 @@ const ShoppingCart = () => {
               Checkout
             </button>
           ) : (
-            <Link to="/carts/pay">
+            <Link to="pay">
               <button className="w-48 bg-[#E89F71] text-white py-2 hover:bg-[#B55E5E] transition">
                 Checkout
               </button>

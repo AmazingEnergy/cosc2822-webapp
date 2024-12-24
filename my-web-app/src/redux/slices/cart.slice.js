@@ -54,34 +54,38 @@ const cartSlice = createSlice({
         state.error = action.payload;
         state.status = 'failed';
       })
+
       // Remove Item from Cart
       .addCase(removeItemFromCart.pending, (state) => {
         console.log('Removing item from cart...');
         state.status = 'loading';
       })
+
       .addCase(removeItemFromCart.fulfilled, (state, action) => {
         console.log('Item removed from cart:', action.payload);
-        const cartItems = action.payload || [];
-        state.items = cartItems;
-        // const totals = calculateCartTotals(cartItems);
-        // state.totalQuantity = totals.totalQuantity;
-        // state.totalPrice = totals.totalPrice;
+        const cartItems = action.payload || []; // Ensure this is the updated cart items
+        state.items = cartItems; // Update the items with the new cart items
+        const totals = calculateCartTotals(cartItems);
+        state.totalQuantity = totals.totalQuantity;
+        state.totalPrice = totals.totalPrice;
         state.status = 'succeeded';
       })
+
       .addCase(removeItemFromCart.rejected, (state, action) => {
         console.error('Failed to remove item from cart:', action.payload);
         state.error = action.payload;
         state.status = 'failed';
       })
+
       // Update Item Quantity
       .addCase(updateItemQuantity.pending, (state) => {
         console.log('Updating item quantity...');
         state.status = 'loading';
       })
       .addCase(updateItemQuantity.fulfilled, (state, action) => {
-        console.log('Item quantity updated:', action.payload);
+        //console.log('Item quantity updated:', action.payload);
         const cartItems = action.payload || [];
-        state.items = cartItems;
+        state.items = cartItems; // Update the items with the new cart items
         const totals = calculateCartTotals(cartItems);
         state.totalQuantity = totals.totalQuantity;
         state.totalPrice = totals.totalPrice;
@@ -117,12 +121,11 @@ const cartSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(submitCart.fulfilled, (state, action) => {
-        console.log('Cart submitted successfully:', action.payload);
-        const cartItems = action.payload || [];
-        state.items = cartItems;
-        const totals = calculateCartTotals(cartItems);
-        state.totalQuantity = totals.totalQuantity;
-        state.totalPrice = totals.totalPrice;
+        // Handle successful submission
+        //console.log('Cart submitted successfully:', action.payload);
+        state.items = []; // Clear items after successful submission
+        state.totalQuantity = 0;
+        state.totalPrice = 0;
         state.status = 'succeeded';
       })
       .addCase(submitCart.rejected, (state, action) => {
@@ -135,16 +138,7 @@ const cartSlice = createSlice({
         //console.log('Loading cart from API...');
         state.status = 'loading';
       })
-      // .addCase(loadCartFromAPI.fulfilled, (state, action) => {
-      //   //console.log('Cart loaded from API:', action.payload);
-      //   const cartItems = action.payload || [];
-      //   state.items = cartItems;
-      //   const totals = calculateCartTotals(cartItems);
-      //   state.totalQuantity = totals.totalQuantity;
-      //   state.totalPrice = totals.totalPrice;
-      //   state.cartId = localStorage.getItem('cartId');
-      //   state.status = 'succeeded';
-      // })
+
       .addCase(loadCartFromAPI.fulfilled, (state, action) => {
         const cartItems = Array.isArray(action.payload) ? action.payload : []; 
         //console.log('Cart items loaded from API:', cartItems);
@@ -187,12 +181,13 @@ export const addItemToCart = createAsyncThunk(
   }
 );
 
+
 export const removeItemFromCart = createAsyncThunk(
   'cart/removeItem',
   async ({ cartId, itemId }, { rejectWithValue }) => {
     try {
       const response = await removeItemFromCartAPI(cartId, itemId);
-      return response.data;
+      return response; 
     } catch (error) {
       console.error('Error removing item from cart:', error);
       return rejectWithValue(error.response?.data || error.message);
@@ -202,10 +197,16 @@ export const removeItemFromCart = createAsyncThunk(
 
 export const updateItemQuantity = createAsyncThunk(
   'cart/updateItemQuantity',
-  async ({ cartId, skuId, change }, { rejectWithValue }) => {
+  async ({ cartId, skuId, quantity }, { rejectWithValue }) => {
     try {
-      const response = await updateItemQuantityAPI(cartId, skuId, change);
-      return response.data;
+      const response = await updateItemQuantityAPI(cartId, skuId, quantity);
+      
+      // Check if response has the expected structure
+      if (!response || !Array.isArray(response.cartItems)) {
+        throw new Error('Invalid response structure: cartItems is not an array');
+      }
+
+      return response.cartItems; // Return the updated cart items
     } catch (error) {
       console.error('Error updating item quantity:', error);
       return rejectWithValue(error.response?.data || error.message);
@@ -227,38 +228,16 @@ export const payCart = createAsyncThunk(
 );
 
 export const submitCart = createAsyncThunk(
-  'cart/submit',
-  async ({ cartId }, { rejectWithValue }) => {
+  'cart/submitCart',
+  async ({ cartId, contactName, email, address, contactPhone }, { rejectWithValue }) => {
     try {
-      const response = await submitCartAPI(cartId);
-      return response.data;
+      const response = await submitCartAPI(cartId, { contactName, email, address, contactPhone });
+      return response; // Return the response data
     } catch (error) {
-      console.error('Error submitting cart:', error);
-      return rejectWithValue(error.response?.data || error.message);
+      return rejectWithValue(error.response.data);
     }
   }
 );
-
-// export const loadCartFromAPI = createAsyncThunk(
-//   'cart/loadCart',
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       const cartId = localStorage.getItem('cartId');
-//       if (!cartId) {
-//         throw new Error('No cartId found in localStorage');
-//       }
-//       const response = await getCartAPI(cartId);
-//       //console.log('API Response:', response); 
-//       if (!response || !response.cartItems) {
-//         throw new Error('Invalid response structure');
-//       }
-//       return response.cartItems;
-//     } catch (error) {
-//       console.error('Error loading cart from API:', error);
-//       return rejectWithValue(error.response?.data || error.message);
-//     }
-//   }
-// );
 
 export const loadCartFromAPI = createAsyncThunk(
   'cart/loadCart',
@@ -269,7 +248,7 @@ export const loadCartFromAPI = createAsyncThunk(
         throw new Error('No cartId found in localStorage');
       }
       const response = await getCartAPI(cartId);
-      console.log('API Response:', response); 
+      //console.log('API Response:', response); 
 
       if (!response || !Array.isArray(response.cartItems)) {
         throw new Error('Invalid response structure: cartItems is not an array');

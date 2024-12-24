@@ -50,13 +50,27 @@ export const getOrderDetailAPI = async (orderId) => {
  * @param {string} orderId - The ID of the order to cancel.
  * @returns {Promise<Object>} - API response data.
  */
-export const cancelOrderAPI = async (orderId) => {
+export const cancelOrderAPI = async (orderId, reason) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/orders/${orderId}/cancel`, {}, { headers: getAuthHeaders() });
-    return response.data; // Assuming the response contains the updated order status
+    const response = await axios.put(`${API_BASE_URL}/orders/${orderId}/cancel`, {
+      reason: reason,
+    }, {
+      headers: getAuthHeaders(),
+    });
+
+    return response.data; // Return the response data
   } catch (error) {
-    console.error(`Error canceling order (orderId: ${orderId}):`, error);
-    throw error; // Rethrow the error to be handled by the calling function
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      console.error(`Error canceling order ${orderId}:`, error.response.data);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error(`No response received for order ${orderId}:`, error.request);
+    } else {
+      // Something happened in setting up the request
+      console.error('Error', error.message);
+    }
+    throw new Error('Unable to cancel order. Please try again.');
   }
 };
 

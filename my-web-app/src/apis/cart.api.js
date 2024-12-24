@@ -120,29 +120,29 @@ export const addItemToCartAPI = async (cartId, newItem) => {
  */
 export const removeItemFromCartAPI = async (cartId, itemId) => {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/carts/${cartId}/removeItem`, {
-      data: { skuId: itemId },
-      headers: getAuthHeaders(),
-    });
-    return response.data;
+    const response = await axios.post(
+      `${API_BASE_URL}/carts/${cartId}/removeItem`,
+      { skuId: itemId }, 
+      { headers: getAuthHeaders() } 
+    );
+    return response.data.cartItems; 
   } catch (error) {
     console.error(`Error removing item from cart (cartId: ${cartId}, itemId: ${itemId}):`, error.response || error.message || error);
     throw new Error('Unable to remove item from cart. Please try again.');
   }
 };
-
 /**
  * Updates the quantity of an item in the cart.
  * @param {string} cartId - The ID of the cart.
  * @param {string} skuId - The SKU ID of the item to update.
- * @param {number} change - The quantity change (+/-).
+ * @param {number} quantity - The quantity change (+/-).
  * @returns {Promise<Object>} - API response data.
  */
-export const updateItemQuantityAPI = async (cartId, skuId, change) => {
+export const updateItemQuantityAPI = async (cartId, skuId, quantity) => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/carts/${cartId}/updateItem`, {
+    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/updateItem`, {
       skuId,
-      change,
+      quantity,
     }, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
@@ -176,14 +176,18 @@ export const payCartAPI = async (cartId, paymentDetails) => {
  * @param {string} cartId - The ID of the cart.
  * @returns {Promise<Object>} - API response data.
  */
-export const submitCartAPI = async (cartId) => {
+export const submitCartAPI = async (cartId, { contactName, email, address, contactPhone }) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/submit`, {}, {
+    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/submit`, {
+      contactName, // Ensure this matches what the API expects
+      contactEmail: email, // Map email to contactEmail
+      deliveryAddress: address,
+      contactPhone:  contactPhone
+    }, {
       headers: getAuthHeaders(),
     });
-    localStorage.removeItem('cartId'); // Clear cartId after submission
-    console.log('Cart submitted successfully');
-    return response.data;
+
+    return response.data; // Return the response data
   } catch (error) {
     console.error(`Error submitting cart for cartId: ${cartId}:`, error.response || error.message || error);
     throw new Error('Unable to submit cart. Please try again.');

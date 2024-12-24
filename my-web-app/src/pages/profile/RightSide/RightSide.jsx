@@ -17,9 +17,10 @@ const RightSide = ({ activeSection }) => {
     const [loadingOrders, setLoadingOrders] = useState(true);
     const [orderDetails, setOrderDetails] = useState(null);
     const [selectedOrderId, setSelectedOrderId] = useState(null);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false); 
+    const [cancelReason, setCancelReason] = useState(''); 
 
     useEffect(() => {
-        // Fetch user profile on mount or when idToken changes
         const fetchUserProfile = async () => {
             const token = idToken || localStorage.getItem('idToken');
             if (!token) {
@@ -95,7 +96,63 @@ const RightSide = ({ activeSection }) => {
             alert('Failed to update profile. Please try again later.');
         }
     };
+
+    useEffect(() => {
+        if (activeSection === 2 && idToken) {
+            const fetchOrders = async () => {
+                setLoadingOrders(true);
+                try {
+                    const data = await listOrdersAPI();
+                    setOrders(data);
+                } catch (error) {
+                    console.error('Error fetching orders:', error);
+                    setOrders([]);
+                } finally {
+                    setLoadingOrders(false);
+                }
+            };
+
+            fetchOrders();
+        }
+    }, [activeSection, idToken]);
+
+    const handleCancelOrder = async (orderId) => {
+        if (!cancelReason) {
+            alert("Please provide a reason for canceling the order.");
+            return;
+        }
     
+        try {
+            await cancelOrderAPI(orderId, cancelReason);
+            alert('Order canceled successfully!');
+            setOrders((prevOrders) =>
+                prevOrders.map(order =>
+                    order.id === orderId ? { ...order, status: 'cancelled' } : order
+                )
+            );
+            setIsCancelModalOpen(false); // Close the modal after successful cancellation
+            setCancelReason(''); // Reset the reason
+        } catch (error) {
+            console.error('Error canceling order:', error);
+            alert('Failed to cancel order. Please try again later.');
+        }
+    };
+
+    const handleOrderClick = async (orderId) => {
+        if (selectedOrderId === orderId) {
+            setSelectedOrderId(null);
+            setOrderDetails(null);
+        } else {
+            try {
+                const details = await getOrderDetailAPI(orderId);
+                setOrderDetails(details);
+                setSelectedOrderId(orderId);
+            } catch (error) {
+                console.error('Error fetching order details:', error);
+            }
+        }
+    };
+
     const renderPersonalInfo = () => (
         <div className="w-full bg-white shadow-xl p-6 space-y-6 rounded-lg max-w-5xl mx-auto">
             <h1 className="text-2xl font-semibold text-gray-800 text-center">My Personal Information</h1>
@@ -191,63 +248,6 @@ const RightSide = ({ activeSection }) => {
         </div>
     );
 
-    useEffect(() => {
-        // Fetch new orders when activeSection changes to 2
-        if (activeSection === 2 && idToken) {
-            const fetchOrders = async () => {
-                setLoadingOrders(true);
-                try {
-                    const data = await listOrdersAPI(); // Use the new API function
-                    //console.log("Orders fetched:", JSON.stringify(data, null, 2)); // Log the new orders
-                    setOrders(data);
-                } catch (error) {
-                    console.error('Error fetching orders:', error);
-                    setOrders([]);
-                } finally {
-                    setLoadingOrders(false);
-                }
-            };
-
-            fetchOrders();
-        }
-    }, [activeSection, idToken]);
-
-    const handleCancelOrder = async (orderId) => {
-        if (window.confirm("Are you sure you want to cancel this order?")) {
-            try {
-                // Call the cancel order API function
-                await cancelOrderAPI(orderId);
-                alert('Order canceled successfully!');
-                // Optionally, refresh the orders list or update the state
-                setOrders((prevOrders) =>
-                    prevOrders.map(order =>
-                        order.id === orderId ? { ...order, status: 'cancelled' } : order
-                    )
-                );
-            } catch (error) {
-                console.error('Error canceling order:', error);
-                alert('Failed to cancel order. Please try again later.');
-            }
-        }
-    };
-
-    const handleOrderClick = async (orderId) => {
-        if (selectedOrderId === orderId) {
-            // If the same order is clicked, toggle the detail view off
-            setSelectedOrderId(null);
-            setOrderDetails(null);
-        } else {
-            // Fetch order details
-            try {
-                const details = await getOrderDetailAPI(orderId);
-                setOrderDetails(details); // Set the order details
-                setSelectedOrderId(orderId); // Set the selected order ID
-            } catch (error) {
-                console.error('Error fetching order details:', error);
-            }
-        }
-    };
-
     const renderOrders = () => (
         <div className="w-full space-y-4">
             <div className="bg-white p-4 shadow rounded-lg">
@@ -268,7 +268,6 @@ const RightSide = ({ activeSection }) => {
                                 <p className="text-sm text-gray-500">Order Date: <span className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</span></p>
                                 <p className="text-sm text-gray-500">Total Amount: <span className="font-medium">${order.totalAmount}</span></p>
                             </div>
-                            {/* Show order items if this order is selected */}
                             {selectedOrderId === order.id && orderDetails && (
                                 <div className="mt-2">
                                     <h2 className="text-lg font-semibold">Order Items:</h2>
@@ -281,13 +280,13 @@ const RightSide = ({ activeSection }) => {
                                     </ul>
                                 </div>
                             )}
-                            {/* Cancel Order Button */}
                             {order.status === 'new' && (
                                 <div className="flex justify-end">
                                     <button
                                         onClick={(e) => {
-                                            e.stopPropagation(); // Prevent triggering the order click
-                                            handleCancelOrder(order.id);
+                                            e.stopPropagation();
+                                            setIsCancelModalOpen(true); // Open the cancel modal
+                                            setSelectedOrderId(order.id); // Set the selected order ID
                                         }}
                                         className="mt-2 px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition duration-200"
                                     >
@@ -304,10 +303,41 @@ const RightSide = ({ activeSection }) => {
         </div>
     );
 
+    const renderCancelModal = () => (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+                <h2 className="text-lg font-semibold mb-4">Cancel Order</h2>
+                <p>Please provide a reason for canceling the order:</p>
+                <textarea
+                    className="w-full border border-gray-300 rounded-lg p-2 mt-2"
+                    rows="4"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Enter your reason here..."
+                />
+                <div className="flex justify-end mt-4">
+                    <button
+                        onClick={() => setIsCancelModalOpen(false)}
+                        className="mr-2 px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition duration-200"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => handleCancelOrder(selectedOrderId)}
+                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition duration-200"
+                    >
+                        Confirm Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <div className="p-6 max-w-6xl mx-auto">
             {activeSection === 1 && renderPersonalInfo()}
             {activeSection === 2 && renderOrders()}
+            {isCancelModalOpen && renderCancelModal()}
         </div>
     );
 };
