@@ -13,7 +13,8 @@ const RightSide = ({ activeSection }) => {
         firstName: '',
         lastName: '',
         email: '',
-        userName: '', // Use userName instead of username
+        userName: '',
+        password: '',
     });
     const [error, setError] = useState(null);
     const [orders, setOrders] = useState([]);
@@ -24,39 +25,33 @@ const RightSide = ({ activeSection }) => {
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
 
-    // Email validation regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    // Password validation function
     const isValidPassword = (password) => {
-        // At least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!])[A-Za-z\d@#$%^&+=!]{8,}$/;
         return passwordRegex.test(password);
     };
 
-    // Validate Email
     const validateEmail = () => {
-        if (!emailRegex.test(email)) {
+        if (!emailRegex.test(profile.email)) {
             setError("Please enter a valid email address.");
             return false;
         }
         return true;
     };
 
-    // Validate Password
     const validatePassword = () => {
-        if (!isValidPassword(password)) {
+        if (profile.password && !isValidPassword(profile.password)) {
             setError("Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
             return false;
         }
         return true;
     };
 
-
     useEffect(() => {
         const fetchProfile = async () => {
-            setLoadingProfile(true); // Set loadingProfile to true
-            setError(null); // Reset error state before fetching
+            setLoadingProfile(true);
+            setError(null);
             try {
                 const profileData = await getProfileDetailAPI();
                 setProfile({
@@ -64,15 +59,15 @@ const RightSide = ({ activeSection }) => {
                     firstName: profileData.firstName,
                     lastName: profileData.lastName,
                     email: profileData.email,
-                    userName: profileData.userName, 
+                    userName: profileData.userName,
                 });
             } catch (err) {
                 setError(err.message);
             } finally {
-                setLoadingProfile(false); // Set loadingProfile to false
+                setLoadingProfile(false);
             }
         };
-    
+
         fetchProfile();
     }, []);
 
@@ -83,34 +78,34 @@ const RightSide = ({ activeSection }) => {
             return;
         }
 
-        if (!validateEmail(profile.email) || !validatePassword(profile.password)) return;
+        if (!validateEmail() || !validatePassword()) return;
 
         try {
             // Update profile details
             const updatedProfile = await updateProfileAPI({
-                email: profile.email,
                 firstName: profile.firstName,
                 lastName: profile.lastName,
+                email: profile.email,
             });
-    
+
+            // Update local state with the new profile data
             setProfile(prevProfile => ({
                 ...prevProfile,
                 firstName: updatedProfile.firstName || 'Not Provided',
                 lastName: updatedProfile.lastName || 'Not Provided',
-                userName: updatedProfile.userName || 'Not Provided',
                 email: updatedProfile.email || prevProfile.email,
             }));
             alert('Profile updated successfully!');
-    
+
             // Update password if provided
             if (profile.password) {
                 await updateNewPassword(profile.userName, profile.password);
                 alert('Password updated successfully!');
             }
-            
+
             // Clear the password field after updating
             setProfile(prevProfile => ({ ...prevProfile, password: '' }));
-    
+
         } catch (error) {
             console.error('Error updating profile or password:', error);
             alert('Failed to update profile or password. Please try again later.');
