@@ -1,99 +1,119 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from '../../../hooks/useAuth.js';
+import { updateNewPassword} from "../../../aws/cognitoService.js";
+
 import { listOrdersAPI, cancelOrderAPI, getOrderDetailAPI } from '../../../apis/order.api.js';
+import { getProfileDetailAPI, updateProfileAPI } from '../../../apis/profile.api.js';
 import './rightside.scss';
 
 const RightSide = ({ activeSection }) => {
     const { idToken } = useAuth();
     const [profile, setProfile] = useState({
-        firstname: '',
-        lastname: '',
-        username: '',
+        customerId: '',
+        firstName: '',
+        lastName: '',
         email: '',
-        password: '',
+        userName: '', // Use userName instead of username
     });
+    const [error, setError] = useState(null);
     const [orders, setOrders] = useState([]);
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [loadingOrders, setLoadingOrders] = useState(true);
     const [orderDetails, setOrderDetails] = useState(null);
     const [selectedOrderId, setSelectedOrderId] = useState(null);
-    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false); 
-    const [cancelReason, setCancelReason] = useState(''); 
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
+
+    // Email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Password validation function
+    const isValidPassword = (password) => {
+        // At least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!])[A-Za-z\d@#$%^&+=!]{8,}$/;
+        return passwordRegex.test(password);
+    };
+
+    // Validate Email
+    const validateEmail = () => {
+        if (!emailRegex.test(email)) {
+            setError("Please enter a valid email address.");
+            return false;
+        }
+        return true;
+    };
+
+    // Validate Password
+    const validatePassword = () => {
+        if (!isValidPassword(password)) {
+            setError("Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
+            return false;
+        }
+        return true;
+    };
+
 
     useEffect(() => {
-        const fetchUserProfile = async () => {
-            const token = idToken || localStorage.getItem('idToken');
-            if (!token) {
-                console.error("No id_token found");
-                setLoadingProfile(false);
-                return;
-            }
-
-            setLoadingProfile(true);
+        const fetchProfile = async () => {
+            setLoadingProfile(true); // Set loadingProfile to true
+            setError(null); // Reset error state before fetching
             try {
-                const response = await fetch('https://service.dev.grp6asm3.com/profile', {
-                    headers: { Authorization: `Bearer ${token}` },
+                const profileData = await getProfileDetailAPI();
+                setProfile({
+                    customerId: profileData.customerId,
+                    firstName: profileData.firstName,
+                    lastName: profileData.lastName,
+                    email: profileData.email,
+                    userName: profileData.userName, 
                 });
-
-                if (!response.ok) throw new Error(`Failed to fetch user profile: ${response.statusText}`);
-
-                const data = await response.json();
-
-                if (data && data.email) {
-                    setProfile({
-                        username: data.customerId || 'N/A',
-                        email: data.email,
-                        firstname: data.firstName || '',
-                        lastname: data.lastName || '',
-                    });
-                } else {
-                    throw new Error("Invalid profile data received");
-                }
-            } catch (error) {
-                console.error("Error fetching user profile:", error);
-                alert(`Error fetching user profile: ${error.message}`);
+            } catch (err) {
+                setError(err.message);
             } finally {
-                setLoadingProfile(false);
+                setLoadingProfile(false); // Set loadingProfile to false
             }
         };
-
-        fetchUserProfile();
-    }, [idToken]);
+    
+        fetchProfile();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!profile.email || !profile.firstName || !profile.lastName) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        if (!validateEmail(profile.email) || !validatePassword(profile.password)) return;
+
         try {
-            const response = await fetch('https://service.dev.grp6asm3.com/update-profile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${idToken}`,
-                },
-                body: JSON.stringify({
-                    email: profile.email,
-                    firstname: profile.firstname,
-                    lastname: profile.lastname,
-                    password: profile.password,
-                }),
+            // Update profile details
+            const updatedProfile = await updateProfileAPI({
+                email: profile.email,
+                firstName: profile.firstName,
+                lastName: profile.lastName,
             });
     
-            if (!response.ok) {
-                throw new Error(`Failed to update profile: ${response.statusText}`);
-            }
-    
-            const data = await response.json();
-            setProfile({
-                ...profile,
-                firstname: data.firstname || 'Not Provided',
-                lastname: data.lastname || 'Not Provided',
-                username: data.username || 'Not Provided',
-                email: data.email || profile.email,
-                password: '', // Clear password field
-            });
+            setProfile(prevProfile => ({
+                ...prevProfile,
+                firstName: updatedProfile.firstName || 'Not Provided',
+                lastName: updatedProfile.lastName || 'Not Provided',
+                userName: updatedProfile.userName || 'Not Provided',
+                email: updatedProfile.email || prevProfile.email,
+            }));
             alert('Profile updated successfully!');
+    
+            // Update password if provided
+            if (profile.password) {
+                await updateNewPassword(profile.userName, profile.password);
+                alert('Password updated successfully!');
+            }
+            
+            // Clear the password field after updating
+            setProfile(prevProfile => ({ ...prevProfile, password: '' }));
+    
         } catch (error) {
-            console.error('Error updating profile:', error);
-            alert('Failed to update profile. Please try again later.');
+            console.error('Error updating profile or password:', error);
+            alert('Failed to update profile or password. Please try again later.');
         }
     };
 
@@ -121,7 +141,7 @@ const RightSide = ({ activeSection }) => {
             alert("Please provide a reason for canceling the order.");
             return;
         }
-    
+
         try {
             await cancelOrderAPI(orderId, cancelReason);
             alert('Order canceled successfully!');
@@ -165,41 +185,42 @@ const RightSide = ({ activeSection }) => {
                         <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
                         <input
                             type="text"
-                            id="username"
+                            id="userName"
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             placeholder="Enter your username"
-                            value={profile.username}
-                            onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                            value={profile.userName}
+                            onChange={(e) => setProfile({ ...profile, userName: e.target.value })}
+                            readOnly
                         />
                     </div>
-    
+
                     {/* Firstname and Lastname */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="firstname" className="block text-sm font-medium text-gray-700">Firstname</label>
                             <input
                                 type="text"
-                                id="firstname"
+                                id="firstName"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                                 placeholder="Enter your firstname"
-                                value={profile.firstname}
-                                onChange={(e) => setProfile({ ...profile, firstname: e.target.value })}
+                                value={profile.firstName}
+                                onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
                             />
                         </div>
-    
+
                         <div>
                             <label htmlFor="lastname" className="block text-sm font-medium text-gray-700">Lastname</label>
                             <input
                                 type="text"
-                                id="lastname"
+                                id="lastName"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                                 placeholder="Enter your lastname"
-                                value={profile.lastname}
-                                onChange={(e) => setProfile({ ...profile, lastname: e.target.value })}
+                                value={profile.lastName}
+                                onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
                             />
                         </div>
                     </div>
-    
+
                     {/* Email */}
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
@@ -212,7 +233,7 @@ const RightSide = ({ activeSection }) => {
                             onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                         />
                     </div>
-    
+
                     {/* Password */}
                     <div>
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
@@ -225,7 +246,7 @@ const RightSide = ({ activeSection }) => {
                             onChange={(e) => setProfile({ ...profile, password: e.target.value })}
                         />
                     </div>
-    
+
                     {/* Action Buttons */}
                     <div className="flex space-x-4">
                         <button
@@ -243,7 +264,7 @@ const RightSide = ({ activeSection }) => {
                         </button>
                     </div>
                 </form>
-    
+
             )}
         </div>
     );

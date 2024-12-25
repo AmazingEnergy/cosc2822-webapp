@@ -3,7 +3,7 @@ import {
   addItemToCartAPI,
   removeItemFromCartAPI,
   updateItemQuantityAPI,
-  payCartAPI,
+  //payCartAPI,
   submitCartAPI,
   getCartAPI,
 } from '../../apis/cart.api.js';
@@ -96,25 +96,25 @@ const cartSlice = createSlice({
         state.error = action.payload;
         state.status = 'failed';
       })
-      // Pay Cart
-      .addCase(payCart.pending, (state) => {
-        console.log('Processing payment...');
-        state.status = 'loading';
-      })
-      .addCase(payCart.fulfilled, (state) => {
-        console.log('Payment processed successfully.');
-        state.items = [];
-        state.totalQuantity = 0;
-        state.totalPrice = 0;
-        state.cartId = null;
-        state.status = 'succeeded';
-        localStorage.removeItem('cartId');
-      })
-      .addCase(payCart.rejected, (state, action) => {
-        console.error('Failed to process payment:', action.payload);
-        state.error = action.payload;
-        state.status = 'failed';
-      })
+      // // Pay Cart
+      // .addCase(payCart.pending, (state) => {
+      //   console.log('Processing payment...');
+      //   state.status = 'loading';
+      // })
+      // .addCase(payCart.fulfilled, (state) => {
+      //   console.log('Payment processed successfully.');
+      //   state.items = [];
+      //   state.totalQuantity = 0;
+      //   state.totalPrice = 0;
+      //   state.cartId = null;
+      //   state.status = 'succeeded';
+      //   localStorage.removeItem('cartId');
+      // })
+      // .addCase(payCart.rejected, (state, action) => {
+      //   console.error('Failed to process payment:', action.payload);
+      //   state.error = action.payload;
+      //   state.status = 'failed';
+      // })
       // Submit Cart
       .addCase(submitCart.pending, (state) => {
         console.log('Submitting cart...');
@@ -214,18 +214,18 @@ export const updateItemQuantity = createAsyncThunk(
   }
 );
 
-export const payCart = createAsyncThunk(
-  'cart/pay',
-  async ({ cartId, paymentDetails }, { rejectWithValue }) => {
-    try {
-      const response = await payCartAPI(cartId, paymentDetails);
-      return response.data;
-    } catch (error) {
-      console.error('Error processing payment:', error);
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
+// export const payCart = createAsyncThunk(
+//   'cart/pay',
+//   async ({ cartId, paymentDetails }, { rejectWithValue }) => {
+//     try {
+//       const response = await payCartAPI(cartId, paymentDetails);
+//       return response.data;
+//     } catch (error) {
+//       console.error('Error processing payment:', error);
+//       return rejectWithValue(error.response?.data || error.message);
+//     }
+//   }
+// );
 
 export const submitCart = createAsyncThunk(
   'cart/submitCart',

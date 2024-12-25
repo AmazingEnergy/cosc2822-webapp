@@ -158,7 +158,7 @@ const ShoppingCart = () => {
               Checkout
             </button>
           ) : (
-            <Link to="pay">
+            <Link to="checkout">
               <button className="w-48 bg-[#E89F71] text-white py-2 hover:bg-[#B55E5E] transition">
                 Checkout
               </button>

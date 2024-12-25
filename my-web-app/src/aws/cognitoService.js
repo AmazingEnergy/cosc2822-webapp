@@ -169,6 +169,22 @@ export const resetPassword = async (username, verificationCode, newPassword) => 
   }
 };
 
+export const updateNewPassword = async (username, newPassword) => {
+  const secretHash = calculateSecretHash(username);
+  const command = new ConfirmForgotPasswordCommand({
+      ClientId: CLIENT_ID,
+      Username: username,
+      Password: newPassword,
+      SecretHash: secretHash,
+  });
+
+  try {
+      await cognitoClient.send(command);
+  } catch (error) {
+      throw new Error(error.message || "Error updating password");
+  }
+};
+
 export const sendResetCode = async (username) => {
   const secretHash = calculateSecretHash(username);
   const command = new ForgotPasswordCommand({

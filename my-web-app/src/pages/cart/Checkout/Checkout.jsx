@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
-import { loadCartFromAPI, submitCart, clearCart } from '../../../redux/slices/cart.slice.js';
+import { submitCart, loadCartFromAPI, clearCart } from '../../../redux/slices/cart.slice.js';
+import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 const Checkout = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -12,15 +13,13 @@ const Checkout = () => {
   const [contactPhone, setContactPhone] = useState('');
   const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(true);
+  const [paymentError, setPaymentError] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const cartItems = useSelector((state) => {
-    //console.log("Current cart items:", state.cart.items); // Log current items
-    return state.cart.items || [];
-  });
-
+  const cartItems = useSelector((state) => state.cart.items || []);
   const cartId = localStorage.getItem("cartId");
 
   useEffect(() => {
@@ -60,8 +59,7 @@ const Checkout = () => {
       isValid = false;
       errorMessages.address = "Address is required";
     }
-
-    if (!contactPhone) { // Validate contact phone
+    if (!contactPhone) {
       isValid = false;
       errorMessages.phone = "Phone number is required";
     }
@@ -69,6 +67,13 @@ const Checkout = () => {
     setErrors(errorMessages);
     setIsFormValid(isValid);
     return isValid;
+  };
+
+  const handlePaymentClick = () => {
+    if (validateForm()) {
+      // Navigate to the payment page
+      navigate('payment', { state: { cartId, totalPrice, email, firstName, lastName, address, contactPhone } });
+    }
   };
 
   const handleConfirmation = async () => {
@@ -105,8 +110,9 @@ const Checkout = () => {
 
   const handleViewOrder = () => {
     setIsModalOpen(false);
-    navigate("/profile"); 
+    navigate("/profile");
   };
+
   return (
     <div className="w-full min-h-screen flex justify-center items-center bg-[#F5F5F5] p-4">
       <div className="flex w-full max-w-6xl bg-white shadow-lg rounded-lg border border-solid overflow-hidden">
@@ -116,10 +122,10 @@ const Checkout = () => {
           <div className="mb-6">
             <h2 className="text-lg font-bold mb-2">Contact</h2>
             <div className="grid grid-cols-2 gap-4 mb-4">
-            <input
+              <input
                 type="text"
                 placeholder="Email"
-                className={`w -full border ${errors.email ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
+                className={`w-full border ${errors.email ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -128,8 +134,8 @@ const Checkout = () => {
                 type="text"
                 placeholder="Phone number"
                 className={`w-full border ${errors.phone ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
-                value={contactPhone} // Update value to contactPhone
-                onChange={(e) => setContactPhone(e.target.value)} // Update state on change
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
               />
               {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
             </div>
@@ -180,9 +186,14 @@ const Checkout = () => {
           {/* Payment Method */}
           <div className="mb-6">
             <h2 className="text-lg font-bold mb-2">Payment Method</h2>
-            <div className="flex items-center justify-between border border-gray-300 p-4 rounded-md bg-white">
-              {/* Payment method fields can be added here */}
-            </div>
+            {/* <CardElement className="border border-gray-300 p-4 rounded-md" /> */}
+            {paymentError && <p className="text-red-500 text-sm">{paymentError}</p>}
+            <button
+              className="bg-[#E89F71] text-white px-6 py-2 mt-4 hover:bg-orange-500"
+              onClick={handlePaymentClick}
+            >
+              Proceed to Payment
+            </button>
           </div>
 
           {/* Error Message */}
@@ -200,8 +211,9 @@ const Checkout = () => {
             <button
               className="bg-[#E89F71] text-white px-6 py-2 hover:bg-orange-500"
               onClick={handleConfirmation}
+              disabled={isProcessing} // Disable button while processing
             >
-              Confirmation
+              {isProcessing ? 'Processing...' : 'Confirm Payment'}
             </button>
           </div>
         </div>
@@ -242,44 +254,44 @@ const Checkout = () => {
       {/* Modal */}
       {isModalOpen && (
         <div
-        className="fixed inset-0 bg-[#F9F1E7] bg-opacity-80 flex justify-center items-center z-50 transition-opacity duration-300"
-        role="dialog"
-        aria-labelledby="modalTitle"
-        aria-hidden={!isModalOpen}
-      >
-        <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md flex flex-col items-center justify-center space-y-6 transform transition-transform duration-300">
-          <div>
-            <img
-              className="h-24 w-24"
-              src="/assets/check.png" 
-              alt="Checkmark Icon" 
-            />
-          </div>
-          <h2
-            id="modalTitle"
-            className="text-2xl text-[#008080] font-bold text-center"
-          >
-            Thank You For Your Order
-          </h2>
-          <p className="text-center text-gray-700">
-            Your order has been successfully placed. You can continue shopping or review your orders.
-          </p>
-          <div className="flex flex-row space-x-4">
-            <button
-              onClick={handleContinueShopping}
-              className="bg-[#E89F71] text-white px-6 py-2 rounded-md hover:bg-orange-500 transition duration-200"
+          className="fixed inset-0 bg-[#F9F1E7] bg-opacity-80 flex justify-center items-center z-50 transition-opacity duration-300"
+          role="dialog"
+          aria-labelledby="modalTitle"
+          aria-hidden={!isModalOpen}
+        >
+          <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md flex flex-col items-center justify-center space-y-6 transform transition-transform duration-300">
+            <div>
+              <img
+                className="h-24 w-24"
+                src="/assets/check.png"
+                alt="Checkmark Icon"
+              />
+            </div>
+            <h2
+              id="modalTitle"
+              className="text-2xl text-[#008080] font-bold text-center"
             >
-              Continue Shopping
-            </button>
-            <button
-              onClick={handleViewOrder}
-              className="bg-[#baa190] text-gray-600 px-6 py-2 rounded-md hover:bg-[#d1b7a0] transition duration-200"
-            >
-              View Order
-            </button>
+              Thank You For Your Order
+            </h2>
+            <p className="text-center text-gray-700">
+              Your order has been successfully placed. You can continue shopping or review your orders.
+            </p>
+            <div className="flex flex-row space-x-4">
+              <button
+                onClick={handleContinueShopping}
+                className="bg-[#E89F71] text-white px-6 py-2 rounded-md hover:bg-orange-500 transition duration-200"
+              >
+                Continue Shopping
+              </button>
+              <button
+                onClick={handleViewOrder}
+                className="bg-[#baa190] text-gray-600 px-6 py-2 rounded-md hover:bg-[#d1b7a0] transition duration-200"
+              >
+                View Order
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       )}
     </div>
   );
