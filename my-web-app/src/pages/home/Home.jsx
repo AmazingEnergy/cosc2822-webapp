@@ -5,16 +5,55 @@ import axios from 'axios';
 
 const Home = () => {
     const [products, setProducts] = useState([]); // State for products
+    const [originalProducts, setOriginalProducts] = useState([]);
     const [loading, setLoading] = useState(true); // State for loading
     const [error, setError] = useState(null); // State for error handling
     const navigate = useNavigate(); // Initialize useNavigate
+
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const handleSearchChange = (event) => {
+        const query = event.target.value;
+        setSearchQuery(query);
+
+        if (query === '') {
+            // Reset products to the original list if the search query is empty
+            setProducts(originalProducts);
+        } else {
+            // Filter products based on the search query
+            const filteredProducts = originalProducts.filter(product =>
+                product.name.toLowerCase().includes(query.toLowerCase())
+            );
+            setProducts(filteredProducts);
+        }
+    };
+
+    const handleSearchSubmit = (event) => {
+        event.preventDefault();
+        console.log("Searching for:", searchQuery);
+        
+        // Filter products based on the search query
+        const filteredProducts = products.filter(product =>
+            product.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    
+        // Update the state with filtered products
+        setProducts(filteredProducts);
+    };
+
+    const handleKeyDown = (event) => {
+        if (event.key === 'Enter') {
+            handleSearchSubmit(event); // Call the submit function on Enter key press
+        }
+    };
+
 
     const fetchProducts = async () => {
         setLoading(true);
         try {
             const response = await axios.get('https://service.dev.grp6asm3.com/products');
-            //console.log('API Response:', response.data);
-            setProducts(response.data.items || []); // Fallback to empty array if no items
+            setOriginalProducts(response.data.items || []); // Store original products
+            setProducts(response.data.items || []); // Set products to display
         } catch (error) {
             console.error('Error fetching products:', error.response ? error.response.data : error.message);
             setError('Failed to fetch products.');
@@ -22,7 +61,6 @@ const Home = () => {
             setLoading(false);
         }
     };
-
     useEffect(() => {
         fetchProducts();
     }, []);
@@ -33,7 +71,21 @@ const Home = () => {
 
     return (
         <div className="home-container">
+            <div className="m-4 flex justify-end">
+                <form className="flex items-center" onSubmit={handleSearchSubmit}>
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        onKeyDown={handleKeyDown}
+                        className="search-input"
+                    />
+                </form>
+            </div>
+
             <h1 className="title mt-2">Our Products</h1>
+
 
             {loading ? (
                 <div>Loading...</div> // Show loading spinner or message
@@ -50,8 +102,8 @@ const Home = () => {
                             onClick={() => handleProductClick(product.skuId)} // Navigate on click
                         >
                             <img
-                                src={product.imageUrls[0]} 
-                                alt={product.name} 
+                                src={product.imageUrls[0]}
+                                alt={product.name}
                                 className="product-image"
                             />
 

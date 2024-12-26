@@ -3,7 +3,6 @@ import {
   addItemToCartAPI,
   removeItemFromCartAPI,
   updateItemQuantityAPI,
-  //payCartAPI,
   submitCartAPI,
   getCartAPI,
 } from '../../apis/cart.api.js';
@@ -96,25 +95,6 @@ const cartSlice = createSlice({
         state.error = action.payload;
         state.status = 'failed';
       })
-      // // Pay Cart
-      // .addCase(payCart.pending, (state) => {
-      //   console.log('Processing payment...');
-      //   state.status = 'loading';
-      // })
-      // .addCase(payCart.fulfilled, (state) => {
-      //   console.log('Payment processed successfully.');
-      //   state.items = [];
-      //   state.totalQuantity = 0;
-      //   state.totalPrice = 0;
-      //   state.cartId = null;
-      //   state.status = 'succeeded';
-      //   localStorage.removeItem('cartId');
-      // })
-      // .addCase(payCart.rejected, (state, action) => {
-      //   console.error('Failed to process payment:', action.payload);
-      //   state.error = action.payload;
-      //   state.status = 'failed';
-      // })
       // Submit Cart
       .addCase(submitCart.pending, (state) => {
         console.log('Submitting cart...');
@@ -229,9 +209,9 @@ export const updateItemQuantity = createAsyncThunk(
 
 export const submitCart = createAsyncThunk(
   'cart/submitCart',
-  async ({ cartId, contactName, email, address, contactPhone }, { rejectWithValue }) => {
+  async ({ cartId, contactName, email, address, contactPhone, promotionCode }, { rejectWithValue }) => {
     try {
-      const response = await submitCartAPI(cartId, { contactName, email, address, contactPhone });
+      const response = await submitCartAPI(cartId, { contactName, email, address, contactPhone, promotionCode });
       return response; // Return the response data
     } catch (error) {
       return rejectWithValue(error.response.data);

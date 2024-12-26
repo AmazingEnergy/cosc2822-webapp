@@ -3,13 +3,7 @@ import { PATH } from "../paths";
 import React, { Suspense, lazy, useState, useEffect, useCallback } from "react";
 import Spinner from "../components/Spinner";
 import MainLayout from "../layouts/MainLayout";
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 import { getPayClientSecretAPI } from '../apis/cart.api.js';
-
-const testKey = import.meta.env.VITE_TEST_KEY
-console.log("testKey = " + testKey);
-const stripePromise = loadStripe(testKey);
 
 
 /**
@@ -34,9 +28,7 @@ const OrderDetailAdminPage = lazy(() => import("../pages/admin/order-details-adm
 
 const CartPage = lazy(() => import("../pages/cart/ShoppingCart"));
 const CheckoutPage = lazy(() => import("../pages/cart/Checkout"));
-const ReturnPage = lazy(() => import("../pages/cart/Return"));
-
-//const PaymentPage = lazy(() => import("../pages/cart/Payment"));
+const PaymentPage = lazy(() => import("../pages/cart/Payment"));
 
 
 /**
@@ -164,7 +156,7 @@ const useRouteElements = () => {
       element: <MainLayout />,
       children: [
         {
-          //path: "",
+          path: "",
           index: true,
           element: (
             <Suspense fallback={<Spinner />}>
@@ -174,111 +166,115 @@ const useRouteElements = () => {
         },
         {
           path: "checkout",
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <CheckoutPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: "checkout/payment",
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <PaymentPage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.PRODUCTSADMIN,
+      element: <MainLayout />,
+      children: [
+        {
+          path: "",
           index: true,
           element: (
             <Suspense fallback={<Spinner />}>
-              {/* <Elements stripe={stripePromise} options={options}> */}
-                <CheckoutPage />
-              {/* </Elements> */}
+              <ProductsPage />
             </Suspense>
           ),
-        }
+        },
+        {
+          path: ":skuId", // Dynamic parameter ":id"
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <ProductDetailAdminPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: "update/:skuId", // Dynamic parameter ":id"
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <UpdateProductPage />
+            </Suspense>
+          ),
+        },
       ],
     },
-   
-      {
-        path: PATH.PRODUCTSADMIN,
-        element: <MainLayout />,
-        children: [
-          {
-            path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <ProductsPage />
-              </Suspense>
-            ),
-          },
-          {
-            path: ":skuId", // Dynamic parameter ":id"
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <ProductDetailAdminPage />
-              </Suspense>
-            ),
-          },
-          {
-            path: "update/:skuId", // Dynamic parameter ":id"
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <UpdateProductPage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.CREATEPRODUCT,
-        element: <MainLayout />,
-        children: [
-          {
-            path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <CreateProduct />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.UPDATEINVENTORY,
-        element: <MainLayout />,
-        children: [
-          {
-            path: ":code",
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <UpdateInventoryPage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.ADMINORDERS,
-        element: <MainLayout />,
-        children: [
-          {
-            path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <AdminOrdersPage />
-              </Suspense>
-            ),
-          },
-          {
-            path: ":orderId",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <OrderDetailAdminPage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: "*",
-        element: (
-          <Suspense fallback={<Spinner />}>
-            <NotFoundPage />
-          </Suspense>
-        ),
-      },
-    ]);
+    {
+      path: PATH.CREATEPRODUCT,
+      element: <MainLayout />,
+      children: [
+        {
+          path: "",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <CreateProduct />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.UPDATEINVENTORY,
+      element: <MainLayout />,
+      children: [
+        {
+          path: ":code",
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <UpdateInventoryPage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.ADMINORDERS,
+      element: <MainLayout />,
+      children: [
+        {
+          path: "",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <AdminOrdersPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: ":orderId",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <OrderDetailAdminPage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: "*",
+      element: (
+        <Suspense fallback={<Spinner />}>
+          <NotFoundPage />
+        </Suspense>
+      ),
+    },
+  ]);
   return elements;
 };
 

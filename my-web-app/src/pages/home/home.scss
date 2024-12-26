@@ -137,3 +137,22 @@
         grid-template-columns: 1fr; /* 1 column for very small screens */
     }
 }
+
+
+.search-input {
+    border: 1px solid #D9D9D9; // Light gray border
+    border-radius: 25px; // Rounded corners
+    padding: 10px 20px; // Padding for the input
+    width: 300px; // Set a width for the search bar
+    transition: border-color 0.3s, box-shadow 0.3s; // Smooth transition for focus effects
+
+    &:focus {
+        outline: none; // Remove default outline
+        border-color: #E89F71; // Change border color on focus
+        box-shadow: 0 0 5px rgba(232, 159, 113, 0.5); // Add shadow effect on focus
+    }
+
+    &::placeholder {
+        color: #A0A0A0; // Placeholder color
+    }
+}

@@ -6,8 +6,7 @@ import "./header.scss";
 
 const Header = () => {
     const { isAuthenticated, userRole } = useAuth();
-    //const [isLoggedIn, setIsLoggedIn] = useState(false);
-
+    
     return (
         <header className="flex justify-between items-center p-4 pl-6 bg-white shadow-md border border-solid border-[#D9D9D9]">
             <Link to="/">
@@ -15,6 +14,7 @@ const Header = () => {
                     EASYSTORE
                 </div>
             </Link>
+
             <nav className="flex space-x-4">
                 {!isAuthenticated ? (
                     // Render Sign In and Register buttons
