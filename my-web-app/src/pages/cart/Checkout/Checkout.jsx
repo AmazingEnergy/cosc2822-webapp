@@ -239,7 +239,7 @@ const Checkout = () => {
               </button>
             </div>
             {promotionError && <p className="text-red-500 text-sm">{promotionError}</p>}
-            {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>} {/* Display success message */}
+            {successMessage && <p className="text-green-500 mt-2 text-sm">{successMessage}</p>} {/* Display success message */}
           </div>
 
           {/* Error Message */}
