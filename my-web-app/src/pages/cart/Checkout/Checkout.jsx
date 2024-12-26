@@ -1,66 +1,52 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from 'react-redux';
-import { getPayClientSecretAPI } from '../../../apis/cart.api.js';
-import { submitCart, loadCartFromAPI, clearCart } from '../../../redux/slices/cart.slice.js';
-import { loadStripe } from '@stripe/stripe-js';
-import { CardElement, useStripe, useElements, Elements } from '@stripe/react-stripe-js';
-import {
-  EmbeddedCheckoutProvider,
-  EmbeddedCheckout
-} from '@stripe/react-stripe-js';
-
-const testKey = import.meta.env.VITE_TEST_KEY;
-const stripePromise = loadStripe(testKey);
+import { useSelector } from 'react-redux';
+import { getPromotionCodeAPI, getListPromotionCodeAPI } from '../../../apis/promotion-code.api.js';
+import { updateItemQuantityAPI } from "../../../apis/cart.api.js";
 
 const Checkout = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [address, setAddress] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [promotionCode, setPromotionCode] = useState('');
+  const [promotionError, setPromotionError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(true);
-  const [paymentError, setPaymentError] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [clientSecret, setClientSecret] = useState(null);
-  const [loadingClientSecret, setLoadingClientSecret] = useState(true); // Loading state
-  const [showEmbeddedCheckout, setShowEmbeddedCheckout] = useState(false); // State to control visibility of EmbeddedCheckout
-
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const stripe = useStripe();
-  const elements = useElements();
   const cartItems = useSelector((state) => state.cart.items || []);
   const cartId = localStorage.getItem("cartId");
-
-  // Fetch the client secret when the component mounts
-  const fetchClientSecret = useCallback(async () => {
-    if (!cartId) return; // Ensure cartId is available
-    try {
-      const response = await getPayClientSecretAPI(cartId);
-      if (response.clientSecret) {
-        setClientSecret(response.clientSecret); // Set the client secret
-      } else {
-        console.error('Client secret is missing in the response.');
-        setPaymentError("Client secret is missing.");
-      }
-    } catch (error) {
-      console.error('Error fetching client secret:', error.message);
-      setPaymentError("Failed to fetch payment information.");
-    } finally {
-      setLoadingClientSecret(false); // Set loading to false after fetching
-    }
-  }, [cartId]);
+  const [updatedCartItems, setUpdatedCartItems] = useState(cartItems);
 
   useEffect(() => {
-    fetchClientSecret(); // Fetch client secret when cartId is available
-    if (cartId) {
-      dispatch(loadCartFromAPI());
+    // Load data from local storage
+    const savedData = JSON.parse(localStorage.getItem('checkoutData'));
+    if (savedData) {
+      setEmail(savedData.email);
+      setFirstName(savedData.firstName);
+      setLastName(savedData.lastName);
+      setAddress(savedData.address);
+      setContactPhone(savedData.contactPhone);
+      setPromotionCode(savedData.promotionCode || ''); // Load promotion code if available
     }
-  }, [fetchClientSecret, dispatch, cartId]);
+  }, []);
 
-  const totalPrice = cartItems.reduce((total, item) => {
+  const handleInputChange = (setter) => (event) => {
+    setter(event.target.value);
+    // Save data to local storage
+    localStorage.setItem('checkoutData', JSON.stringify({
+      email,
+      firstName,
+      lastName,
+      address,
+      contactPhone,
+      promotionCode
+    }));
+  };
+
+  const totalPrice = updatedCartItems.reduce((total, item) => {
     const price = parseFloat(item.productPrice) || 0;
     const quantity = parseInt(item.quantity, 10) || 0;
     return total + price * quantity;
@@ -101,79 +87,74 @@ const Checkout = () => {
     return isValid;
   };
 
-  const handleApplyCode = () => {
-    const code = document.querySelector('input').value; 
-    // Logic to apply the promotion code
-    console.log(`Applying promotion code: ${code}`);
-    // You can add your validation and application logic here
+  const handleApplyCode = async (code) => {
+    if (!code) {
+      setPromotionError(''); // Clear any previous error
+      return; // No promotion code to apply
+    }
+  
+    try {
+      // Step 1: Get the list of valid promotion codes
+      const promotionItems = await getListPromotionCodeAPI();
+      
+      // Step 2: Check if the entered code is valid
+      if (!promotionItems.includes(code)) {
+        setPromotionError('Invalid promotion code. Please try again.');
+        setSuccessMessage(''); // Clear success message
+        return;
+      }
+  
+      // Step 3: Call the API to get promotion details
+      const promotionDetails = await getPromotionCodeAPI(code);
+      
+      // Step 4: Calculate the discount based on promotion details
+      const discountPercentage = promotionDetails.discount; //  0.05 for 5%
+      const discountAmount = totalPrice * discountPercentage; // Calculate discount amount
+  
+      // Step 5: Update product prices based on the discount
+      const newCartItems = cartItems.map(item => {
+        const newPrice = item.productPrice - discountAmount; // Adjust price based on discount
+        return {
+          ...item,
+          productPrice: Math.max(0, newPrice) // Ensure the price does not go below zero
+        };
+      });
+  
+      // Step 6: Call updateItemQuantityAPI for each item
+      for (const item of newCartItems) {
+        const updatedQuantity = item.quantity; 
+        await updateItemQuantityAPI(cartId, item.skuId, updatedQuantity, ); 
+      }
+  
+      // Update the state with the new cart items
+      setUpdatedCartItems(newCartItems);
+      setSuccessMessage('Promotion code applied successfully!'); // Set success message
+      setPromotionError(''); // Clear any previous error
+    } catch (error) {
+      console.error('Failed to apply promotion code:', error.message);
+      setPromotionError(`Error applying promotion code: ${error.message}`);
+      setSuccessMessage(''); // Clear success message
+    }
   };
-
-  const handleConfirmation = async (event) => {
+  
+  const handleMoveToPaymentProcess = (event) => {
     event.preventDefault();
 
     // Validate the form before proceeding
     if (!validateForm()) return;
 
-    // Check if Stripe and Elements are loaded
-    if (!stripe || !elements || !clientSecret) {
-      setPaymentError("Stripe.js has not loaded yet or client secret is missing.");
-      return;
-    }
-
-    setIsProcessing(true);
-    setPaymentError(null);
-
-    //const cardElement = elements.getElement(CardElement);
-
-    try {
-      // // Create a payment method
-      // const { error, paymentMethod } = await stripe.createPaymentMethod({
-      //   type: 'card',
-      //   card: cardElement,
-      //   billing_details: {
-      //     email,
-      //     name: `${firstName} ${lastName}`,
-      //     address: {
-      //       line1: address,
-      //       phone: contactPhone,
-      //     },
-      //   },
-      // });
-
-      // // Handle any errors from creating the payment method
-      // if (error) {
-      //   setPaymentError(error.message);
-      //   return; // Exit early if there's an error
-      // }
-
-      // Prepare payload for submitting the cart
-      const payload = {
-        cartId,
-        contactName: `${firstName} ${lastName}`,
+    // Navigate to the Payment page with the collected data
+    navigate('/carts/checkout/payment', {
+      state: {
         email,
+        firstName,
+        lastName,
         address,
         contactPhone,
-        //paymentMethodId: paymentMethod.id // Include the payment method ID
-      };
-      console.log('Submitting cart with payload:', payload); // Log the payload
-
-      // Submit the cart
-      await dispatch(submitCart(payload)).unwrap();
-
-      // Navigate to the return page with order status
-      navigate('/carts/return', { state: { orderStatus: 'Order submitted successfully!' } });
-
-      // Clear local storage and Redux state
-      localStorage.removeItem("cartId");
-      dispatch(clearCart());
-    } catch (error) {
-      // Handle any errors that occur during the submission
-      console.error('Error submitting cart:', error);
-      setPaymentError("There was an error processing your payment.");
-    } finally {
-      // Reset processing state
-      setIsProcessing(false);
-    }
+        promotionCode,
+        updatedCartItems
+      },
+    });
   };
 
   return (
@@ -183,14 +164,14 @@ const Checkout = () => {
         <div className="w-2/3 bg-gray-100 p-8">
           {/* Contact Section */}
           <div className="mb-6">
-            <h2 className="text-lg font-bold mb-2">Contact</h2>
+            <h2 className="text-lg font-bold mb-2">Contact Information</h2>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <input
-                type="text"
+                type="text" 
                 placeholder="Email"
                 className={`w-full border ${errors.email ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleInputChange(setEmail)}
               />
               {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
               <input
@@ -198,7 +179,7 @@ const Checkout = () => {
                 placeholder="Phone number"
                 className={`w-full border ${errors.phone ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
                 value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
+                onChange={handleInputChange(setContactPhone)}
               />
               {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
             </div>
@@ -206,32 +187,30 @@ const Checkout = () => {
 
           {/* Delivery Section */}
           <div className="mb-6">
-            <h2 className="text-lg font-bold mb-2">Delivery</h2>
+            <h2 className="text-lg font-bold mb-2">Delivery Information</h2>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <input
                 type="text"
                 placeholder="First name"
-                className={`border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
+                className={`w-full border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={handleInputChange(setFirstName)}
               />
               {errors.firstName && <p className="text-red-500 text-sm">{errors.firstName}</p>}
-
               <input
                 type="text"
                 placeholder="Last name"
-                className={`border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
+                className={`w-full border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={handleInputChange(setLastName)}
               />
               {errors.lastName && <p className="text-red-500 text-sm">{errors.lastName}</p>}
-
               <input
                 type="text"
                 placeholder="Address"
                 className={`w-full border ${errors.address ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md col-span-2`}
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={handleInputChange(setAddress)}
               />
               {errors.address && <p className="text-red-500 text-sm">{errors.address}</p>}
             </div>
@@ -245,41 +224,19 @@ const Checkout = () => {
                 type="text"
                 placeholder="Enter your promotion code"
                 className="flex-grow border-none outline-none"
+                value={promotionCode}
+                onChange={handleInputChange(setPromotionCode)}
               />
+  
               <button
                 className="ml-4 px-4 py-2 bg-[#E89F71] text-white hover:bg-orange-500"
-                onClick={handleApplyCode} 
+                onClick={() => handleApplyCode(promotionCode)}
               >
                 Apply
               </button>
             </div>
-          </div>
-
-          {/* Payment Method */}
-          <div className="mb-6">
-            <h2 className="text-lg font-bold mb-2">Payment Method</h2>
-            {loadingClientSecret ? (
-              <p>Loading payment information...</p>
-            ) : (
-              <>
-                {showEmbeddedCheckout ? (
-                  <EmbeddedCheckoutProvider
-                    stripe={stripePromise}
-                    options={{ clientSecret }}
-                  >
-                    <EmbeddedCheckout />
-                  </EmbeddedCheckoutProvider>
-                ) : (
-                  <button
-                    className="bg-[#E89F71] text-white px-6 py-2 hover:bg-orange-500"
-                    onClick={() => setShowEmbeddedCheckout(true)}
-                  >
-                    Pay
-                  </button>
-                )}
-                {paymentError && <p className="text-red-500 text-sm">{paymentError}</p>}
-              </>
-            )}
+            {promotionError && <p className="text-red-500 text-sm">{promotionError}</p>}
+            {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>} {/* Display success message */}
           </div>
 
           {/* Error Message */}
@@ -296,10 +253,9 @@ const Checkout = () => {
             </Link>
             <button
               className="bg-[#E89F71] text-white px-6 py-2 hover:bg-orange-500"
-              onClick={handleConfirmation}
-              disabled={isProcessing} // Disable button while processing
+              onClick={handleMoveToPaymentProcess}
             >
-              {isProcessing ? 'Processing...' : 'Confirm'}
+              Next: Payment
             </button>
           </div>
         </div>
@@ -307,10 +263,9 @@ const Checkout = () => {
         {/* Right Section */}
         <div className="w-1/3 p-8 bg-white">
           {/* Cart Items */}
-          {cartItems.length > 0 ? (
-            cartItems.map((item) => (
+          {updatedCartItems.length > 0 ? (
+            updatedCartItems.map((item) => (
               <div key={item.id} className="flex items-center gap-4 mb-6">
-                {/* <div className="w-16 h-16 bg-gray-300 rounded"></div> */}
                 <div className="flex-1">
                   <p className="text-sm text-black">{item.productName}</p>
                 </div>
@@ -323,12 +278,6 @@ const Checkout = () => {
             <p>No items in cart.</p>
           )}
 
-          {/* Shipping Row */}
-          <div className="flex justify-between py-4 border-t">
-            <span>Promotion code</span>
-            <span>$20</span>
-          </div>
-
           {/* Total Row */}
           <div className="flex justify-between pt-4 border-t">
             <span className="font-semibold text-lg">Total</span>
@@ -340,10 +289,4 @@ const Checkout = () => {
   );
 };
 
-export default function CheckoutWrapper() {
-  return (
-    <Elements stripe={stripePromise}>
-      <Checkout />
-    </Elements>
-  );
-}
+export default Checkout;

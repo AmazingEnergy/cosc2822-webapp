@@ -157,13 +157,15 @@ export const removeItemFromCartAPI = async (cartId, itemId) => {
  * @param {string} cartId - The ID of the cart.
  * @param {string} skuId - The SKU ID of the item to update.
  * @param {number} quantity - The quantity change (+/-).
+ * @param {number} discountPrice - The discount price to apply.
  * @returns {Promise<Object>} - API response data.
  */
-export const updateItemQuantityAPI = async (cartId, skuId, quantity) => {
+export const updateItemQuantityAPI = async (cartId, skuId, quantity, discountPrice) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/updateItem`, {
       skuId,
       quantity,
+      discountPrice
     }, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
@@ -171,7 +173,6 @@ export const updateItemQuantityAPI = async (cartId, skuId, quantity) => {
     throw new Error('Unable to update item quantity. Please try again.');
   }
 };
-
 /**
  * Submits the cart for processing.
  * @param {string} cartId - The ID of the cart.

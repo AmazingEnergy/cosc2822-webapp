@@ -5,8 +5,8 @@ import { getProfileDetailAPI } from '../../../apis/profile.api.js';
 
 const LeftSide = ({ setActiveSection }) => {
     const [username, setUsername] = useState();
-    //const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150');
-    const [loading, setLoading] = useState(true); 
+    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
@@ -30,43 +30,34 @@ const LeftSide = ({ setActiveSection }) => {
     }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem('idToken');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('username');
-        navigate("/"); // Redirect to homepage
-        window.location.reload(); 
+        if (window.confirm("Are you sure you want to log out?")) {
+            setIsLoading(true);
+            localStorage.removeItem('idToken');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('checkoutData');
+            localStorage.removeItem('username');
+            navigate("/"); // Redirect to homepage
+            window.location.reload();
+        }
+        setIsLoading(false);
     };
 
     return (
         <div className="left-side flex flex-col space-y-6 p-4">
             {/* Profile Section */}
-            <div className="profile flex flex-row items-center space-x-4 bg-white p-4 shadow hover:shadow-lg transition-shadow duration-300">
-                {/* <img
-                    src={profileImage}
-                    alt={`${username}'s Profile`}
-                    className="w-20 h-20 rounded-full object-cover"
-                /> */}
+            <div className="rounded-sm profile flex flex-row items-center space-x-4 bg-white p-4 shadow hover:shadow-lg transition-shadow duration-300">
                 <div>
                     <p className="font-intel text-lg text-gray-500">Hi,</p>
                     <h1 className="font-akshar font-bold text-2xl text-gray-800">{username}</h1>
                 </div>
             </div>
 
-            <div className="flex justify-end">
-                <button
-                    onClick={handleLogout}
-                    className="nav-item flex items-center space-x-4 p-4 px-6 bg-white shadow hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer"
-                >
-                    Logout
-                </button>
-            </div>
-
             {/* Navigation Options */}
             <div className="navigation flex flex-col space-y-4">
                 <div
                     onClick={() => setActiveSection(1)}
-                    className="nav-item flex items-center space-x-4 p-4 px-6 bg-white shadow hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer"
+                    className="rounded-sm nav-item flex items-center space-x-4 p-4 px-6 bg-white shadow hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -80,7 +71,7 @@ const LeftSide = ({ setActiveSection }) => {
 
                 <div
                     onClick={() => setActiveSection(2)}
-                    className="nav-item flex items-center space-x-4 p-4 px-6 bg-white shadow hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer"
+                    className="rounded-sm nav-item flex items-center space-x-4 p-4 px-6 bg-white shadow hover:bg-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -92,6 +83,17 @@ const LeftSide = ({ setActiveSection }) => {
                     <p className="font-intel text-lg text-gray-700 hover:font-bold">My Orders</p>
                 </div>
             </div>
+
+            <div className="flex justify-center items-center">
+            <button
+                onClick={handleLogout}
+                disabled={isLoading}
+                aria-label="Logout"
+                className={`flex justify-center items-center text-center font-intel rounded-sm w-full nav-item space-x-4 p-4 text-gray-700 bg-gray-100 shadow hover:bg-gray-200 hover:shadow-md transition-all duration-300 ${isLoading ? 'bg-gray-300 cursor-not-allowed' : ''}`}
+            >
+                {isLoading ? 'Logging out...' : 'Logout'}
+            </button>
+        </div>
         </div>
     );
 };
