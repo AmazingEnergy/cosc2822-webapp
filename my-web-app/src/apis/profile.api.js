@@ -23,7 +23,7 @@ const getAuthHeaders = () => {
 export const getProfileDetailAPI = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/profile`, { headers: getAuthHeaders() });
-        console.log('Profile data fetched:', response.data); // Log the response
+        //console.log('Profile data fetched:', response.data); // Log the response
         return response.data; 
     } catch (error) {
         console.error('Error fetching profile data:', error);
@@ -38,10 +38,10 @@ export const getProfileDetailAPI = async () => {
  */
 export const updateProfileAPI = async (profileData) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/update-profile`, profileData, {
+        const response = await axios.post(`${API_BASE_URL}/profile`, profileData, {
             headers: {
                 'Content-Type': 'application/json',
-                ...getAuthHeaders(),
+                ...getAuthHeaders(), // Ensure this function returns the correct headers
             },
         });
 
