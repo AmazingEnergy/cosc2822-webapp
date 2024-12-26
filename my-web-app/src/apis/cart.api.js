@@ -18,6 +18,27 @@ const getAuthHeaders = () => {
 };
 
 /**
+ * Processes payment for the cart.
+ * @param {string} cartId - The ID of the cart.
+ * @returns {Promise<Object>} - Returns the client secret for Stripe payment.
+ */
+export const getPayClientSecretAPI = async (cartId) => {
+  //const returnUrl = `checkout`; 
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/pay`, {
+      // returnUrl, // Include the returnUrl in the request body
+    }, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error getting payment's client secret for cartId: ${cartId}:`, error.response?.data || error.message || error);
+    throw new Error("Unable to get payment's client secret. Please try again.");
+  }
+};
+
+/**
  * Get cart.
  * @returns {Promise<Object>} - API response data containing cart details.
  */
@@ -152,26 +173,6 @@ export const updateItemQuantityAPI = async (cartId, skuId, quantity) => {
 };
 
 /**
- * Processes payment for the cart.
- * @param {string} cartId - The ID of the cart.
- * @param {Object} paymentDetails - The payment details (e.g., card information).
- * @returns {Promise<Object>} - API response data.
- */
-export const payCartAPI = async (cartId, paymentDetails) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/pay`, paymentDetails, {
-      headers: getAuthHeaders(),
-    });
-    localStorage.removeItem('cartId'); // Clear cartId after payment
-    console.log('Payment processed successfully');
-    return response.data;
-  } catch (error) {
-    console.error(`Error processing payment for cartId: ${cartId}:`, error.response || error.message || error);
-    throw new Error('Unable to process payment. Please try again.');
-  }
-};
-
-/**
  * Submits the cart for processing.
  * @param {string} cartId - The ID of the cart.
  * @returns {Promise<Object>} - API response data.
@@ -187,6 +188,7 @@ export const submitCartAPI = async (cartId, { contactName, email, address, conta
       headers: getAuthHeaders(),
     });
 
+    localStorage.removeItem('cartId');
     return response.data; // Return the response data
   } catch (error) {
     console.error(`Error submitting cart for cartId: ${cartId}:`, error.response || error.message || error);

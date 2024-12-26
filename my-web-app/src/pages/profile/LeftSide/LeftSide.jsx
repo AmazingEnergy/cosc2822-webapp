@@ -1,34 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import './leftside.scss';
 import { useNavigate } from "react-router-dom";
+import { getProfileDetailAPI } from '../../../apis/profile.api.js';
 
 const LeftSide = ({ setActiveSection }) => {
-    const [username, setUsername] = useState('User');
-    const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150');
+    const [username, setUsername] = useState();
+    //const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150');
+    const [loading, setLoading] = useState(true); 
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user) {
-            setUsername(user.username || 'User');
-            setProfileImage(user.profileImage || 'https://via.placeholder.com/150');
-        }
+        const fetchUserProfile = async () => {
+            setLoading(true);
+            setError(null); // Reset error state before fetching
+            try {
+                const userProfile = await getProfileDetailAPI(); // Fetch user profile from API
+                setUsername(userProfile.userName || 'User '); // Set username
+                //setProfileImage(userProfile.profileImage || 'https://via.placeholder.com/150'); // Set profile image
+            } catch (err) {
+                setError('Failed to load user profile.'); // Set error message
+                console.error(err);
+            } finally {
+                setLoading(false); // Set loading to false
+            }
+        };
+
+        fetchUserProfile();
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('idToken');
-        navigate("/"); // Redirect to homepage 
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('username');
+        navigate("/"); // Redirect to homepage
+        window.location.reload(); 
     };
 
     return (
         <div className="left-side flex flex-col space-y-6 p-4">
             {/* Profile Section */}
             <div className="profile flex flex-row items-center space-x-4 bg-white p-4 shadow hover:shadow-lg transition-shadow duration-300">
-                <img
+                {/* <img
                     src={profileImage}
                     alt={`${username}'s Profile`}
                     className="w-20 h-20 rounded-full object-cover"
-                />
+                /> */}
                 <div>
                     <p className="font-intel text-lg text-gray-500">Hi,</p>
                     <h1 className="font-akshar font-bold text-2xl text-gray-800">{username}</h1>

@@ -1,8 +1,15 @@
 import { useRoutes } from "react-router-dom";
 import { PATH } from "../paths";
-import { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState, useEffect, useCallback } from "react";
 import Spinner from "../components/Spinner";
 import MainLayout from "../layouts/MainLayout";
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { getPayClientSecretAPI } from '../apis/cart.api.js';
+
+const testKey = import.meta.env.VITE_TEST_KEY
+console.log("testKey = " + testKey);
+const stripePromise = loadStripe(testKey);
 
 
 /**
@@ -27,9 +34,10 @@ const OrderDetailAdminPage = lazy(() => import("../pages/admin/order-details-adm
 
 const CartPage = lazy(() => import("../pages/cart/ShoppingCart"));
 const CheckoutPage = lazy(() => import("../pages/cart/Checkout"));
+const ReturnPage = lazy(() => import("../pages/cart/Return"));
 
-//const HomePage = () => <div>Home Page</div>;
-//const NotFoundPage = () => <div>Not Found</div>;
+//const PaymentPage = lazy(() => import("../pages/cart/Payment"));
+
 
 /**
  * @description
@@ -40,120 +48,144 @@ const CheckoutPage = lazy(() => import("../pages/cart/Checkout"));
  */
 
 const useRouteElements = () => {
-    const elements = useRoutes([
-      {
-        path: PATH.HOME,
-        element: <MainLayout />,
-        children: [
-          {
-            path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <HomePage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.PRODUCT,
-        element: <MainLayout />,
-        children: [
-          {
-            path: ":skuId",
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <ProductDetailPage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.LOGIN,
-        element: <MainLayout />,
-        children: [
-          {
-            path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <LoginPage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.REGISTER,
-        element: <MainLayout />,
-        children: [
-          {
-            path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <RegisterPage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.FORGOTPASSWORD,
-        element: <MainLayout />,
-        children: [
-          {
-            path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <ForgotPasswordPage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.PROFILE,
-        element: <MainLayout />,
-        children: [
-          {
-            path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <ProfilePage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: PATH.CART,
-        element: <MainLayout />,
-        children: [
-          {
-            //path: "",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
-                <CartPage />
-              </Suspense>
-            ),
-          },
-          {
-            path: "pay",
-            index: true,
-            element: (
-              <Suspense fallback={<Spinner />}>
+  const [clientSecret, setClientSecret] = useState(null);
+  const cartId = localStorage.getItem("cartId");
+
+  const fetchClientSecret = useCallback(async () => {
+    try {
+      const response = await getPayClientSecretAPI(cartId); // Call the getPayAPI function
+      setClientSecret(response.clientSecret); // Set the client secret
+    } catch (error) {
+      console.error('Error fetching client secret:', error.message);
+    }
+  }, [cartId]);
+
+  useEffect(() => {
+    if (cartId) {
+      fetchClientSecret(); // Fetch client secret when cartId is available
+    }
+  }, [fetchClientSecret, cartId]);
+
+  const options = {
+    clientSecret: clientSecret, // Use the client secret obtained from the server
+  };
+  const elements = useRoutes([
+    {
+      path: PATH.HOME,
+      element: <MainLayout />,
+      children: [
+        {
+          path: "",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <HomePage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.PRODUCT,
+      element: <MainLayout />,
+      children: [
+        {
+          path: ":skuId",
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <ProductDetailPage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.LOGIN,
+      element: <MainLayout />,
+      children: [
+        {
+          path: "",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <LoginPage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.REGISTER,
+      element: <MainLayout />,
+      children: [
+        {
+          path: "",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <RegisterPage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.FORGOTPASSWORD,
+      element: <MainLayout />,
+      children: [
+        {
+          path: "",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <ForgotPasswordPage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.PROFILE,
+      element: <MainLayout />,
+      children: [
+        {
+          path: "",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <ProfilePage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.CART,
+      element: <MainLayout />,
+      children: [
+        {
+          //path: "",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <CartPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: "checkout",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              {/* <Elements stripe={stripePromise} options={options}> */}
                 <CheckoutPage />
-              </Suspense>
-            ),
-          },
-        ],
-      },
+              {/* </Elements> */}
+            </Suspense>
+          ),
+        }
+      ],
+    },
+   
       {
         path: PATH.PRODUCTSADMIN,
         element: <MainLayout />,
@@ -247,8 +279,7 @@ const useRouteElements = () => {
         ),
       },
     ]);
-
-    return elements;
+  return elements;
 };
 
 export default useRouteElements;

@@ -25,7 +25,6 @@ const Login = () => {
             
             if (result && result.user) {
                 setSuccess("You have logged in successfully!");
-
                 // Parse the idToken to get user attributes and role
                 const userAttributes = parseIdToken(result.idToken);
                 const userRole = userAttributes.role;
@@ -34,6 +33,7 @@ const Login = () => {
                 const redirectPath = userRole === "admin" ? "/admin/products" : "/";
                 setTimeout(() => {
                     navigate(redirectPath);
+                    window.location.reload();
                 }, 2000);
             } else {
                 console.error("User data is missing in the result.");

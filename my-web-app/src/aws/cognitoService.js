@@ -4,7 +4,8 @@ import {
   SignUpCommand,
   ConfirmSignUpCommand,
   ForgotPasswordCommand,
-  ConfirmForgotPasswordCommand
+  ConfirmForgotPasswordCommand,
+  ChangePasswordCommand
 } from "@aws-sdk/client-cognito-identity-provider";
 import * as CryptoJS from "crypto-js";
 
@@ -39,6 +40,9 @@ export const parseIdToken = (idToken) => {
       email: decodedToken["email"] || null,
       exp: decodedToken["exp"] || null,
     };
+
+
+    //console.log(decodedToken);
 
     const groups = decodedToken["cognito:groups"] || [];
     let role = "customer"; // Default role
@@ -88,6 +92,7 @@ export const login = async (username, password) => {
 
     const idToken = response.AuthenticationResult.IdToken;
     const refreshToken = response.AuthenticationResult.RefreshToken;
+    const accessToken = response.AuthenticationResult.AccessToken;
 
     if (!idToken) {
       console.error("idToken is missing in the response");
@@ -97,6 +102,7 @@ export const login = async (username, password) => {
     // Store tokens in localStorage
     localStorage.setItem('idToken', idToken);
     localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('username', username);  
 
     // Parse the IdToken
@@ -104,6 +110,7 @@ export const login = async (username, password) => {
 
     return {
       idToken,
+      accessToken,
       user: userAttributes,
     };
   } catch (error) {
@@ -166,6 +173,27 @@ export const resetPassword = async (username, verificationCode, newPassword) => 
       await cognitoClient.send(command);
   } catch (error) {
       throw new Error(error.message || "Error confirming password reset.");
+  }
+};
+
+export const changePassword = async (accessToken, oldPassword, newPassword) => {
+  const command = new ChangePasswordCommand({
+    AccessToken: accessToken,
+    PreviousPassword: oldPassword,
+    ProposedPassword: newPassword,
+  });
+
+  try {
+    await cognitoClient.send(command);
+  } catch (error) {
+    // Check for specific error codes
+    if (error.name === "NotAuthorizedException") {
+      throw new Error("The old password is incorrect. Please try again.");
+    } else if (error.name === "InvalidParameterException") {
+      throw new Error("The new password does not meet the required criteria.");
+    } else {
+      throw new Error(error.message || "Error changing password");
+    }
   }
 };
 

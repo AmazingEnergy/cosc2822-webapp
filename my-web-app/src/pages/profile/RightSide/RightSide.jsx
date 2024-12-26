@@ -1,99 +1,132 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from '../../../hooks/useAuth.js';
+import { changePassword } from "../../../aws/cognitoService.js";
 import { listOrdersAPI, cancelOrderAPI, getOrderDetailAPI } from '../../../apis/order.api.js';
+import { getProfileDetailAPI, updateProfileAPI } from '../../../apis/profile.api.js';
 import './rightside.scss';
 
 const RightSide = ({ activeSection }) => {
-    const { idToken } = useAuth();
+    const { idToken, accessToken } = useAuth(); // Ensure accessToken is available
     const [profile, setProfile] = useState({
-        firstname: '',
-        lastname: '',
-        username: '',
+        customerId: '',
+        firstName: '',
+        lastName: '',
         email: '',
-        password: '',
+        userName: '',
+        oldPassword: '', // Initialize oldPassword
+        newPassword: '', // Initialize newPassword
     });
+    const [error, setError] = useState(null);
     const [orders, setOrders] = useState([]);
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [loadingOrders, setLoadingOrders] = useState(true);
     const [orderDetails, setOrderDetails] = useState(null);
     const [selectedOrderId, setSelectedOrderId] = useState(null);
-    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false); 
-    const [cancelReason, setCancelReason] = useState(''); 
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const isValidPassword = (password) => {
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!])[A-Za-z\d@#$%^&+=!]{8,}$/;
+        return passwordRegex.test(password);
+    };
+
+    const validateEmail = () => {
+        if (!emailRegex.test(profile.email)) {
+            setError("Please enter a valid email address.");
+            return false;
+        }
+        return true;
+    };
+
+    const validatePassword = () => {
+        const passwordErrorMessage = "Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
+    
+        // Validate new password
+        if (profile.newPassword && !isValidPassword(profile.newPassword)) {
+            setError(passwordErrorMessage);
+            return false;
+        }
+    
+        // Clear error if the new password is valid
+        setError(null);
+        return true;
+    };
 
     useEffect(() => {
-        const fetchUserProfile = async () => {
-            const token = idToken || localStorage.getItem('idToken');
-            if (!token) {
-                console.error("No id_token found");
-                setLoadingProfile(false);
-                return;
-            }
-
+        const fetchProfile = async () => {
             setLoadingProfile(true);
+            setError(null);
             try {
-                const response = await fetch('https://service.dev.grp6asm3.com/profile', {
-                    headers: { Authorization: `Bearer ${token}` },
+                const profileData = await getProfileDetailAPI();
+                setProfile({
+                    customerId: profileData.customerId,
+                    firstName: profileData.firstName,
+                    lastName: profileData.lastName,
+                    email: profileData.email,
+                    userName: profileData.userName,
                 });
-
-                if (!response.ok) throw new Error(`Failed to fetch user profile: ${response.statusText}`);
-
-                const data = await response.json();
-
-                if (data && data.email) {
-                    setProfile({
-                        username: data.customerId || 'N/A',
-                        email: data.email,
-                        firstname: data.firstName || '',
-                        lastname: data.lastName || '',
-                    });
-                } else {
-                    throw new Error("Invalid profile data received");
-                }
-            } catch (error) {
-                console.error("Error fetching user profile:", error);
-                alert(`Error fetching user profile: ${error.message}`);
+            } catch (err) {
+                setError(err.message);
             } finally {
                 setLoadingProfile(false);
             }
         };
 
-        fetchUserProfile();
-    }, [idToken]);
+        fetchProfile();
+    }, []);
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault();
+        if (!validatePassword()) return;
+
+        // Ensure accessToken is available
+        if (!accessToken) {
+            alert('Access token is not available. Please log in again.');
+            return;
+        }
+
+        try {
+            await changePassword(accessToken, profile.oldPassword, profile.newPassword);
+            alert('Password updated successfully!');
+            // Clear password fields after updating
+            setProfile(prevProfile => ({ ...prevProfile, oldPassword: '', newPassword: '' }));
+        } catch (error) {
+            console.error('Error changing password:', error);
+            alert(error.message); // Display the specific error message
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!profile.email || !profile.firstName || !profile.lastName) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        if (!validateEmail()) return;
+
         try {
-            const response = await fetch('https://service.dev.grp6asm3.com/update-profile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${idToken}`,
-                },
-                body: JSON.stringify({
-                    email: profile.email,
-                    firstname: profile.firstname,
-                    lastname: profile.lastname,
-                    password: profile.password,
-                }),
+            // Update profile details
+            const updatedProfile = await updateProfileAPI({
+                firstName: profile.firstName,
+                lastName: profile.lastName,
+                email: profile.email,
             });
-    
-            if (!response.ok) {
-                throw new Error(`Failed to update profile: ${response.statusText}`);
-            }
-    
-            const data = await response.json();
-            setProfile({
-                ...profile,
-                firstname: data.firstname || 'Not Provided',
-                lastname: data.lastname || 'Not Provided',
-                username: data.username || 'Not Provided',
-                email: data.email || profile.email,
-                password: '', // Clear password field
-            });
+
+            // Update local state with the new profile data
+            setProfile(prevProfile => ({
+                ...prevProfile,
+                firstName: updatedProfile.firstName || 'Not Provided',
+                lastName: updatedProfile.lastName || 'Not Provided',
+                email: updatedProfile.email || prevProfile.email,
+            }));
             alert('Profile updated successfully!');
+
         } catch (error) {
             console.error('Error updating profile:', error);
-            alert('Failed to update profile. Please try again later.');
+            alert(error.message); // Display the specific error message
         }
     };
 
@@ -121,7 +154,7 @@ const RightSide = ({ activeSection }) => {
             alert("Please provide a reason for canceling the order.");
             return;
         }
-    
+
         try {
             await cancelOrderAPI(orderId, cancelReason);
             alert('Order canceled successfully!');
@@ -165,41 +198,42 @@ const RightSide = ({ activeSection }) => {
                         <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
                         <input
                             type="text"
-                            id="username"
+                            id="userName"
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             placeholder="Enter your username"
-                            value={profile.username}
-                            onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                            value={profile.userName}
+                            onChange={(e) => setProfile({ ...profile, userName: e.target.value })}
+                            readOnly
                         />
                     </div>
-    
+
                     {/* Firstname and Lastname */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="firstname" className="block text-sm font-medium text-gray-700">Firstname</label>
                             <input
                                 type="text"
-                                id="firstname"
+                                id="firstName"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                                 placeholder="Enter your firstname"
-                                value={profile.firstname}
-                                onChange={(e) => setProfile({ ...profile, firstname: e.target.value })}
+                                value={profile.firstName}
+                                onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
                             />
                         </div>
-    
+
                         <div>
                             <label htmlFor="lastname" className="block text-sm font-medium text-gray-700">Lastname</label>
                             <input
                                 type="text"
-                                id="lastname"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                id="lastName"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue- 500 transition"
                                 placeholder="Enter your lastname"
-                                value={profile.lastname}
-                                onChange={(e) => setProfile({ ...profile, lastname: e.target.value })}
+                                value={profile.lastName}
+                                onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
                             />
                         </div>
                     </div>
-    
+
                     {/* Email */}
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
@@ -212,39 +246,70 @@ const RightSide = ({ activeSection }) => {
                             onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                         />
                     </div>
-    
-                    {/* Password */}
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                            placeholder="Enter your password"
-                            value={profile.password}
-                            onChange={(e) => setProfile({ ...profile, password: e.target.value })}
-                        />
-                    </div>
-    
+
                     {/* Action Buttons */}
-                    <div className="flex space-x-4">
-                        <button
-                            type="button"
-                            onClick={() => setProfile({ ...profile, password: '' })}
-                            className="w-full py-3 font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition duration-200"
-                        >
-                            Cancel
-                        </button>
+                    <div className="flex">
                         <button
                             type="submit"
                             className="w-full py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-200"
                         >
-                            Save
+                            Update Profile
                         </button>
                     </div>
                 </form>
-    
             )}
+        </div>
+    );
+
+    const renderChangePassword = () => (
+        <div className="mt-5 w-full bg-white shadow-xl p-6 space-y-6 rounded-lg max-w-5xl mx-auto">
+            <h1 className="text-2xl font-semibold text-gray-800 text-center">Change Password</h1>
+            <form onSubmit={handleChangePassword} className="space-y-6">
+                {/* Old Password */}
+                <div>
+                    <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700">Old Password</label>
+                    <input
+                        type="password"
+                        id="oldPassword"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        placeholder="Enter your old password"
+                        value={profile.oldPassword}
+                        onChange={(e) => {
+                            setProfile({ ...profile, oldPassword: e.target.value });
+                            setError(null); // Clear error when typing
+                        }}
+                    />
+                </div>
+
+                {/* New Password */}
+                <div>
+                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
+                    <input
+                        type="password"
+                        id="newPassword"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        placeholder="Enter your new password"
+                        value={profile.newPassword}
+                        onChange={(e) => {
+                            setProfile({ ...profile, newPassword: e.target.value });
+                            setError(null); // Clear error when typing
+                        }}
+                    />
+                </div>
+
+                {/* Display Error Message */}
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                {/* Action Buttons */}
+                <div className="flex">
+                    <button
+                        type="submit"
+                        className="w-full py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-200"
+                    >
+                        Change Password
+                    </button>
+                </div>
+            </form>
         </div>
     );
 
@@ -258,7 +323,7 @@ const RightSide = ({ activeSection }) => {
             ) : orders.length > 0 ? (
                 <div className="space-y-4">
                     {orders.map((order) => (
-                        <div key={order.id} className="bg-white shadow-lg p-4 rounded-xl space-y-2 cursor-pointer" onClick={() => handleOrderClick(order.id)}>
+                        <div key={order.id } className="bg-white shadow-lg p-4 rounded-xl space-y-2 cursor-pointer" onClick={() => handleOrderClick(order.id)}>
                             <div className="flex justify-between items-center">
                                 <p className="text-lg font-semibold text-gray-600">Order Number:</p>
                                 <p className="text-lg font-bold text-green-600">{order.orderNumber}</p>
@@ -335,7 +400,12 @@ const RightSide = ({ activeSection }) => {
 
     return (
         <div className="p-6 max-w-6xl mx-auto">
-            {activeSection === 1 && renderPersonalInfo()}
+            {activeSection === 1 && (
+                <>
+                    {renderPersonalInfo()}
+                    {renderChangePassword()}
+                </>
+            )}
             {activeSection === 2 && renderOrders()}
             {isCancelModalOpen && renderCancelModal()}
         </div>
