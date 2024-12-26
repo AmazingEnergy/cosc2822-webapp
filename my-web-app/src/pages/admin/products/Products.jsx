@@ -2,13 +2,17 @@ import React, { useEffect, useState } from "react";
 import AdminSideBar from "../../../components/AdminSideBar";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import useAuth from "../../../hooks/useAuth";
+
 
 const Products = () => {
+  const { isAuthenticated, userRole } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchProduct = async () => {
+
     await axios
       .get("https://service.dev.grp6asm3.com/products")
       .then((response) => {
@@ -28,10 +32,15 @@ const Products = () => {
     
   }
   
-
-  useEffect(() => {
-    fetchProduct();
-  }, []);
+  useEffect( () => {
+    if (isAuthenticated && userRole !== undefined) {
+      if (userRole === "admin") {
+        fetchProduct();
+      } else {
+        navigate("/");
+      }
+    }
+  }, [isAuthenticated, userRole, navigate]);
 
 
   const handleCreateProduct = () => {
@@ -44,7 +53,7 @@ const Products = () => {
   );
 
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-[100vh]">
       {/* Sidebar */}
       <AdminSideBar />
 
@@ -89,7 +98,9 @@ const Products = () => {
                   <td className="px-4 py-2">
                     <button
                       className="text-blue-500 hover:underline"
-                      onClick={() => navigate(`/admin/products/${product.skuId}`)}
+                      onClick={() =>
+                        navigate(`/admin/products/${product.skuId}`)
+                      }
                     >
                       {product.name}
                     </button>

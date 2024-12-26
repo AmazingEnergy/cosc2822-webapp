@@ -31,7 +31,7 @@ const Login = () => {
                 const userRole = userAttributes.role;
 
                 // Redirect based on role
-                const redirectPath = userRole === "admin" ? "/admin-dashboard" : "/";
+                const redirectPath = userRole === "admin" ? "/admin/products" : "/";
                 setTimeout(() => {
                     navigate(redirectPath);
                 }, 2000);
