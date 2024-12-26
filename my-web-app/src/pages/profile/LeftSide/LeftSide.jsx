@@ -31,6 +31,7 @@ const LeftSide = ({ setActiveSection }) => {
 
     const handleLogout = () => {
         localStorage.removeItem('idToken');
+        localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('username');
         navigate("/"); // Redirect to homepage

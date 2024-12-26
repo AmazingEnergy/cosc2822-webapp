@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from '../../../hooks/useAuth.js';
-import { updateNewPassword} from "../../../aws/cognitoService.js";
-
+import { changePassword } from "../../../aws/cognitoService.js";
 import { listOrdersAPI, cancelOrderAPI, getOrderDetailAPI } from '../../../apis/order.api.js';
 import { getProfileDetailAPI, updateProfileAPI } from '../../../apis/profile.api.js';
 import './rightside.scss';
 
 const RightSide = ({ activeSection }) => {
-    const { idToken } = useAuth();
+    const { idToken, accessToken } = useAuth(); // Ensure accessToken is available
     const [profile, setProfile] = useState({
         customerId: '',
         firstName: '',
         lastName: '',
         email: '',
         userName: '',
-        password: '',
+        oldPassword: '', // Initialize oldPassword
+        newPassword: '', // Initialize newPassword
     });
     const [error, setError] = useState(null);
     const [orders, setOrders] = useState([]);
@@ -41,10 +41,16 @@ const RightSide = ({ activeSection }) => {
     };
 
     const validatePassword = () => {
-        if (profile.password && !isValidPassword(profile.password)) {
-            setError("Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
+        const passwordErrorMessage = "Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
+    
+        // Validate new password
+        if (profile.newPassword && !isValidPassword(profile.newPassword)) {
+            setError(passwordErrorMessage);
             return false;
         }
+    
+        // Clear error if the new password is valid
+        setError(null);
         return true;
     };
 
@@ -71,6 +77,27 @@ const RightSide = ({ activeSection }) => {
         fetchProfile();
     }, []);
 
+    const handleChangePassword = async (e) => {
+        e.preventDefault();
+        if (!validatePassword()) return;
+
+        // Ensure accessToken is available
+        if (!accessToken) {
+            alert('Access token is not available. Please log in again.');
+            return;
+        }
+
+        try {
+            await changePassword(accessToken, profile.oldPassword, profile.newPassword);
+            alert('Password updated successfully!');
+            // Clear password fields after updating
+            setProfile(prevProfile => ({ ...prevProfile, oldPassword: '', newPassword: '' }));
+        } catch (error) {
+            console.error('Error changing password:', error);
+            alert(error.message); // Display the specific error message
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!profile.email || !profile.firstName || !profile.lastName) {
@@ -78,7 +105,7 @@ const RightSide = ({ activeSection }) => {
             return;
         }
 
-        if (!validateEmail() || !validatePassword()) return;
+        if (!validateEmail()) return;
 
         try {
             // Update profile details
@@ -97,18 +124,9 @@ const RightSide = ({ activeSection }) => {
             }));
             alert('Profile updated successfully!');
 
-            // Update password if provided
-            if (profile.password) {
-                await updateNewPassword(profile.userName, profile.password);
-                alert('Password updated successfully!');
-            }
-
-            // Clear the password field after updating
-            setProfile(prevProfile => ({ ...prevProfile, password: '' }));
-
         } catch (error) {
-            console.error('Error updating profile or password:', error);
-            alert('Failed to update profile or password. Please try again later.');
+            console.error('Error updating profile:', error);
+            alert(error.message); // Display the specific error message
         }
     };
 
@@ -208,7 +226,7 @@ const RightSide = ({ activeSection }) => {
                             <input
                                 type="text"
                                 id="lastName"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue- 500 transition"
                                 placeholder="Enter your lastname"
                                 value={profile.lastName}
                                 onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
@@ -229,38 +247,69 @@ const RightSide = ({ activeSection }) => {
                         />
                     </div>
 
-                    {/* Password */}
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                            placeholder="Enter your password"
-                            value={profile.password}
-                            onChange={(e) => setProfile({ ...profile, password: e.target.value })}
-                        />
-                    </div>
-
                     {/* Action Buttons */}
-                    <div className="flex space-x-4">
-                        <button
-                            type="button"
-                            onClick={() => setProfile({ ...profile, password: '' })}
-                            className="w-full py-3 font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition duration-200"
-                        >
-                            Cancel
-                        </button>
+                    <div className="flex">
                         <button
                             type="submit"
                             className="w-full py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-200"
                         >
-                            Save
+                            Update Profile
                         </button>
                     </div>
                 </form>
-
             )}
+        </div>
+    );
+
+    const renderChangePassword = () => (
+        <div className="mt-5 w-full bg-white shadow-xl p-6 space-y-6 rounded-lg max-w-5xl mx-auto">
+            <h1 className="text-2xl font-semibold text-gray-800 text-center">Change Password</h1>
+            <form onSubmit={handleChangePassword} className="space-y-6">
+                {/* Old Password */}
+                <div>
+                    <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700">Old Password</label>
+                    <input
+                        type="password"
+                        id="oldPassword"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        placeholder="Enter your old password"
+                        value={profile.oldPassword}
+                        onChange={(e) => {
+                            setProfile({ ...profile, oldPassword: e.target.value });
+                            setError(null); // Clear error when typing
+                        }}
+                    />
+                </div>
+
+                {/* New Password */}
+                <div>
+                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
+                    <input
+                        type="password"
+                        id="newPassword"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        placeholder="Enter your new password"
+                        value={profile.newPassword}
+                        onChange={(e) => {
+                            setProfile({ ...profile, newPassword: e.target.value });
+                            setError(null); // Clear error when typing
+                        }}
+                    />
+                </div>
+
+                {/* Display Error Message */}
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                {/* Action Buttons */}
+                <div className="flex">
+                    <button
+                        type="submit"
+                        className="w-full py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-200"
+                    >
+                        Change Password
+                    </button>
+                </div>
+            </form>
         </div>
     );
 
@@ -274,7 +323,7 @@ const RightSide = ({ activeSection }) => {
             ) : orders.length > 0 ? (
                 <div className="space-y-4">
                     {orders.map((order) => (
-                        <div key={order.id} className="bg-white shadow-lg p-4 rounded-xl space-y-2 cursor-pointer" onClick={() => handleOrderClick(order.id)}>
+                        <div key={order.id } className="bg-white shadow-lg p-4 rounded-xl space-y-2 cursor-pointer" onClick={() => handleOrderClick(order.id)}>
                             <div className="flex justify-between items-center">
                                 <p className="text-lg font-semibold text-gray-600">Order Number:</p>
                                 <p className="text-lg font-bold text-green-600">{order.orderNumber}</p>
@@ -351,7 +400,12 @@ const RightSide = ({ activeSection }) => {
 
     return (
         <div className="p-6 max-w-6xl mx-auto">
-            {activeSection === 1 && renderPersonalInfo()}
+            {activeSection === 1 && (
+                <>
+                    {renderPersonalInfo()}
+                    {renderChangePassword()}
+                </>
+            )}
             {activeSection === 2 && renderOrders()}
             {isCancelModalOpen && renderCancelModal()}
         </div>
