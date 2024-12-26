@@ -23,11 +23,11 @@ const getAuthHeaders = () => {
  * @returns {Promise<Object>} - Returns the client secret for Stripe payment.
  */
 export const getPayClientSecretAPI = async (cartId) => {
-  const returnUrl = `${API_BASE_URL}/carts/${cartId}/checkout`; 
+  //const returnUrl = `checkout`; 
 
   try {
     const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/pay`, {
-      returnUrl, // Include the returnUrl in the request body
+      // returnUrl, // Include the returnUrl in the request body
     }, {
       headers: getAuthHeaders(),
     });

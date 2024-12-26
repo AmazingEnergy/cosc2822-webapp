@@ -101,6 +101,13 @@ const Checkout = () => {
     return isValid;
   };
 
+  const handleApplyCode = () => {
+    const code = document.querySelector('input').value; 
+    // Logic to apply the promotion code
+    console.log(`Applying promotion code: ${code}`);
+    // You can add your validation and application logic here
+  };
+
   const handleConfirmation = async (event) => {
     event.preventDefault();
 
@@ -116,28 +123,28 @@ const Checkout = () => {
     setIsProcessing(true);
     setPaymentError(null);
 
-    const cardElement = elements.getElement(CardElement);
+    //const cardElement = elements.getElement(CardElement);
 
     try {
-      // Create a payment method
-      const { error, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: cardElement,
-        billing_details: {
-          email,
-          name: `${firstName} ${lastName}`,
-          address: {
-            line1: address,
-            phone: contactPhone,
-          },
-        },
-      });
+      // // Create a payment method
+      // const { error, paymentMethod } = await stripe.createPaymentMethod({
+      //   type: 'card',
+      //   card: cardElement,
+      //   billing_details: {
+      //     email,
+      //     name: `${firstName} ${lastName}`,
+      //     address: {
+      //       line1: address,
+      //       phone: contactPhone,
+      //     },
+      //   },
+      // });
 
-      // Handle any errors from creating the payment method
-      if (error) {
-        setPaymentError(error.message);
-        return; // Exit early if there's an error
-      }
+      // // Handle any errors from creating the payment method
+      // if (error) {
+      //   setPaymentError(error.message);
+      //   return; // Exit early if there's an error
+      // }
 
       // Prepare payload for submitting the cart
       const payload = {
@@ -146,7 +153,7 @@ const Checkout = () => {
         email,
         address,
         contactPhone,
-        paymentMethodId: paymentMethod.id // Include the payment method ID
+        //paymentMethodId: paymentMethod.id // Include the payment method ID
       };
       console.log('Submitting cart with payload:', payload); // Log the payload
 
@@ -230,12 +237,21 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* Shipping Method */}
+          {/* Promotion Method */}
           <div className="mb-6">
-            <h2 className="text-lg font-bold mb-2">Shipping Method</h2>
+            <h2 className="text-lg font-bold mb-2">Promotion Code</h2>
             <div className="flex items-center justify-between border border-gray-300 p-4 rounded-md bg-white">
-              <span>EasyShop Shipping</span>
-              <span className="font-semibold">$0</span>
+              <input
+                type="text"
+                placeholder="Enter your promotion code"
+                className="flex-grow border-none outline-none"
+              />
+              <button
+                className="ml-4 px-4 py-2 bg-[#E89F71] text-white hover:bg-orange-500"
+                onClick={handleApplyCode} 
+              >
+                Apply
+              </button>
             </div>
           </div>
 
@@ -294,9 +310,9 @@ const Checkout = () => {
           {cartItems.length > 0 ? (
             cartItems.map((item) => (
               <div key={item.id} className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-gray-300 rounded"></div>
+                {/* <div className="w-16 h-16 bg-gray-300 rounded"></div> */}
                 <div className="flex-1">
-                  <p className="text-sm">{item.name}</p>
+                  <p className="text-sm text-black">{item.productName}</p>
                 </div>
                 <span className="font-semibold text-gray-800">
                   ${(parseFloat(item.productPrice) * item.quantity).toFixed(2)}
@@ -309,8 +325,8 @@ const Checkout = () => {
 
           {/* Shipping Row */}
           <div className="flex justify-between py-4 border-t">
-            <span>Shipping</span>
-            <span>$0</span>
+            <span>Promotion code</span>
+            <span>$20</span>
           </div>
 
           {/* Total Row */}
