@@ -637,9 +637,11 @@
 
 
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminSideBar from "../../../components/AdminSideBar";
 import axios from "axios";
+import useAuth from "../../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const CreateProduct = () => {
   const [product, setProduct] = useState({
@@ -656,6 +658,16 @@ const CreateProduct = () => {
     layer1: { name: "", value: "" },
     layer2: { name: "", value: "" },
   });
+   const { isAuthenticated, userRole } = useAuth();
+   const navigate = useNavigate();
+
+   useEffect( () => {
+      if (isAuthenticated && userRole !== undefined) {
+        if (userRole !== "admin") {
+          navigate("/");
+        }
+      }
+    }, [isAuthenticated, userRole, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -772,7 +784,7 @@ const CreateProduct = () => {
   };
 
   return (
-    <div className="flex h-auto">
+    <div className="flex min-h-[100vh]">
       <AdminSideBar />
       <div className="flex-1 p-6 bg-gray-100 h-full">
         <div className="w-full">
@@ -998,7 +1010,7 @@ const CreateProduct = () => {
             </div>
 
             <label className="block text-gray-700 text-sm font-bold mb-2">
-              Specifications 
+              Specifications
             </label>
             {/* Layer 1 */}
             <div className="mb-4">

@@ -4,6 +4,7 @@ import { Suspense, lazy } from "react";
 import Spinner from "../components/Spinner";
 import MainLayout from "../layouts/MainLayout";
 
+
 /**
  * @description
  * Lazy loading for components
@@ -20,6 +21,9 @@ const CreateProduct = lazy(() => import("../pages/admin/create-product"));
 const ProductDetailAdminPage = lazy(() => import("../pages/admin/product-details-admin"));
 const UpdateProductPage = lazy(() => import("../pages/admin/update-product"));
 const ProductDetailPage = lazy(() => import("../pages/product/ProductDetail"));
+const UpdateInventoryPage = lazy(() => import("../pages/admin/update-inventory"));
+const AdminOrdersPage = lazy(() => import("../pages/admin/orders/Orders"));
+const OrderDetailAdminPage = lazy(() => import("../pages/admin/order-details-admin/OrderDetailAdmin"));
 
 const CartPage = lazy(() => import("../pages/cart/ShoppingCart"));
 const CheckoutPage = lazy(() => import("../pages/cart/Checkout"));
@@ -147,7 +151,7 @@ const useRouteElements = () => {
                 <CheckoutPage />
               </Suspense>
             ),
-          }
+          },
         ],
       },
       {
@@ -191,6 +195,44 @@ const useRouteElements = () => {
             element: (
               <Suspense fallback={<Spinner />}>
                 <CreateProduct />
+              </Suspense>
+            ),
+          },
+        ],
+      },
+      {
+        path: PATH.UPDATEINVENTORY,
+        element: <MainLayout />,
+        children: [
+          {
+            path: ":code",
+            element: (
+              <Suspense fallback={<Spinner />}>
+                <UpdateInventoryPage />
+              </Suspense>
+            ),
+          },
+        ],
+      },
+      {
+        path: PATH.ADMINORDERS,
+        element: <MainLayout />,
+        children: [
+          {
+            path: "",
+            index: true,
+            element: (
+              <Suspense fallback={<Spinner />}>
+                <AdminOrdersPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: ":orderId",
+            index: true,
+            element: (
+              <Suspense fallback={<Spinner />}>
+                <OrderDetailAdminPage />
               </Suspense>
             ),
           },

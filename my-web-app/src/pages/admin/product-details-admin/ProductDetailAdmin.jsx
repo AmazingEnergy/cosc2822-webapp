@@ -119,7 +119,6 @@
 
 // export default ProductDetailAdmin;
 
-
 // import React, { useEffect, useState } from "react";
 // import { useParams, useNavigate } from "react-router-dom";
 // import axios from "axios";
@@ -206,9 +205,6 @@
 //           </div>
 //         </div>
 
-        
-    
-
 //         {/* Description */}
 //         <p className="mt-4">{product.description}</p>
 
@@ -228,19 +224,26 @@
 
 // export default ProductDetailAdmin;
 
-
-
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import AdminSideBar from "../../../components/AdminSideBar";
+import useAuth from "../../../hooks/useAuth";
 
 const ProductDetailAdmin = () => {
   const { skuId } = useParams(); // Retrieve the 'skuId' from the URL
   const navigate = useNavigate(); // For navigation
   const [product, setProduct] = useState(null);
   const [mainImage, setMainImage] = useState("");
+  const { isAuthenticated, userRole } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && userRole !== undefined) {
+      if (userRole !== "admin") {
+        navigate("/");
+      }
+    }
+  }, [isAuthenticated, userRole, navigate]);
 
   useEffect(() => {
     // Fetch product details when component mounts
@@ -263,6 +266,7 @@ const ProductDetailAdmin = () => {
           isActive: item.isActive,
           skuId: item.skuId,
           specs: item.specs || {}, // Include specs in the product object
+          inventory: item.inventory || {}, // Include inventory in the product object
         });
 
         // Set default main image
@@ -284,8 +288,12 @@ const ProductDetailAdmin = () => {
     navigate(`/admin/products/update/${skuId}`);
   };
 
+  const handleUpdateInventory = () => {
+    navigate(`/admin/update-inventory/${product.stockCode}`);
+  };
+
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-[100vh]">
       <AdminSideBar />
       <div className="flex-1 p-6">
         <h1 className="text-2xl font-bold">{product.name}</h1>
@@ -345,13 +353,30 @@ const ProductDetailAdmin = () => {
         {/* Description */}
         <p className="mt-4">{product.description}</p>
 
+        {/* Inventory Section */}
+        {product.inventory && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold">Inventory</h3>
+            <p>Quantity: {product.inventory.quantity}</p>
+            <p>Status: {product.inventory.isActive ? "Active" : "Inactive"}</p>
+            <p>Stock Code: {product.inventory.stockCode}</p>
+          </div>
+        )}
+
         {/* Update Button */}
-        <div className="mt-6">
+        <div className="mt-6 flex">
           <button
             onClick={handleUpdate}
-            className="bg-[#D07373] text-white px-4 py-2 rounded hover:bg-[#E89F71]"
+            className="bg-[#D07373] mr-4 text-white px-4 py-2 rounded hover:bg-[#E89F71]"
           >
             Update Product
+          </button>
+
+          <button
+            onClick={handleUpdateInventory}
+            className="bg-[#E89F71] text-white px-4 py-2 rounded hover:bg-[#E89F71]"
+          >
+            Update Inventory
           </button>
         </div>
       </div>
