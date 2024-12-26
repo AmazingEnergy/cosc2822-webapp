@@ -178,17 +178,19 @@ export const updateItemQuantityAPI = async (cartId, skuId, quantity, discountPri
  * @param {string} cartId - The ID of the cart.
  * @returns {Promise<Object>} - API response data.
  */
-export const submitCartAPI = async (cartId, { contactName, email, address, contactPhone }) => {
+export const submitCartAPI = async (cartId, { contactName, email, address, contactPhone, promotionCode }) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/submit`, {
       contactName, // Ensure this matches what the API expects
       contactEmail: email, // Map email to contactEmail
       deliveryAddress: address,
-      contactPhone:  contactPhone
+      contactPhone:  contactPhone,
+      promotionCode: promotionCode
     }, {
       headers: getAuthHeaders(),
     });
 
+    //console.log("promotionCode=" +promotionCode);
     localStorage.removeItem('cartId');
     return response.data; // Return the response data
   } catch (error) {

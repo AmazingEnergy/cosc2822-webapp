@@ -42,13 +42,13 @@ const RightSide = ({ activeSection }) => {
 
     const validatePassword = () => {
         const passwordErrorMessage = "Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
-    
+
         // Validate new password
         if (profile.newPassword && !isValidPassword(profile.newPassword)) {
             setError(passwordErrorMessage);
             return false;
         }
-    
+
         // Clear error if the new password is valid
         setError(null);
         return true;
@@ -323,7 +323,7 @@ const RightSide = ({ activeSection }) => {
             ) : orders.length > 0 ? (
                 <div className="space-y-4">
                     {orders.map((order) => (
-                        <div key={order.id } className="bg-white shadow-lg p-4 rounded-xl space-y-2 cursor-pointer" onClick={() => handleOrderClick(order.id)}>
+                        <div key={order.id} className="bg-white shadow-lg p-4 rounded-xl space-y-2 cursor-pointer" onClick={() => handleOrderClick(order.id)}>
                             <div className="flex justify-between items-center">
                                 <p className="text-lg font-semibold text-gray-600">Order Number:</p>
                                 <p className="text-lg font-bold text-green-600">{order.orderNumber}</p>
@@ -331,7 +331,14 @@ const RightSide = ({ activeSection }) => {
                             <div>
                                 <p className="text-sm text-gray-500">Order Status: <span className="font-medium">{order.status}</span></p>
                                 <p className="text-sm text-gray-500">Order Date: <span className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</span></p>
-                                <p className="text-sm text-gray-500">Total Amount: <span className="font-medium">${order.totalAmount}</span></p>
+                                <p className="text-sm text-gray-500">
+                                    Total Amount:
+                                    <span className={`font-medium ${order.discountAmount ? 'text-green-600' : ''}`}>
+                                        {order.discountAmount
+                                            ? ` $${order.discountAmount.toFixed(2)} (discount applied: $${(order.totalAmount - order.discountAmount).toFixed(2)})`
+                                            : ` $${order.totalAmount.toFixed(2)}`}
+                                    </span>
+                                </p>
                             </div>
                             {selectedOrderId === order.id && orderDetails && (
                                 <div className="mt-2">
@@ -339,7 +346,10 @@ const RightSide = ({ activeSection }) => {
                                     <ul className="list-disc pl-5">
                                         {orderDetails.orderItems.map(item => (
                                             <li key={item.id} className="text-sm text-gray-600">
-                                                {item.productName} - Quantity: {item.quantity} - Price: ${item.productPrice}
+                                                {item.productName} - Quantity: {item.quantity} - Price: $
+                                                {item.discountPrice
+                                                    ? item.discountPrice + ` (Previous price: $` + item.productPrice + `)`
+                                                    : item.productPrice}
                                             </li>
                                         ))}
                                     </ul>

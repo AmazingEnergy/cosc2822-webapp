@@ -108,22 +108,25 @@ const Checkout = () => {
       const promotionDetails = await getPromotionCodeAPI(code);
       
       // Step 4: Calculate the discount based on promotion details
-      const discountPercentage = promotionDetails.discount; //  0.05 for 5%
-      const discountAmount = totalPrice * discountPercentage; // Calculate discount amount
-  
+      const discountPercentage = promotionDetails.discount; // e.g., 0.05 for 5%
+      
       // Step 5: Update product prices based on the discount
       const newCartItems = cartItems.map(item => {
-        const newPrice = item.productPrice - discountAmount; // Adjust price based on discount
+        const originalPrice = parseFloat(item.productPrice) || 0;
+        const discountAmount = originalPrice * discountPercentage; // Calculate discount amount
+        const newPrice = originalPrice - discountAmount; // Adjust price based on discount
         return {
           ...item,
-          productPrice: Math.max(0, newPrice) // Ensure the price does not go below zero
+          productPrice: Math.max(0, newPrice), // Ensure the price does not go below zero
+          discountPrice: newPrice // Optionally store the new price as discountPrice
         };
       });
   
       // Step 6: Call updateItemQuantityAPI for each item
       for (const item of newCartItems) {
         const updatedQuantity = item.quantity; 
-        await updateItemQuantityAPI(cartId, item.skuId, updatedQuantity, ); 
+        const discountPrice = item.productPrice; // Pass the updated price as discountPrice
+        await updateItemQuantityAPI(cartId, item.skuId, updatedQuantity, discountPrice); // Ensure skuId is correct
       }
   
       // Update the state with the new cart items

@@ -12,7 +12,7 @@ const stripePromise = loadStripe(testKey);
 const Payment = () => {
     const location = useLocation();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { email, firstName, lastName, address, contactPhone, updatedCartItems } = location.state || {};
+    const { email, firstName, lastName, address, contactPhone, promotionCode, updatedCartItems } = location.state || {};
 
     const [paymentError, setPaymentError] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -76,6 +76,7 @@ const Payment = () => {
                 email,
                 address,
                 contactPhone,
+                promotionCode,
             };
 
             await dispatch(submitCart(payload)).unwrap();

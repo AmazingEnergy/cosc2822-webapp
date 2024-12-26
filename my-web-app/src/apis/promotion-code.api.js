@@ -21,7 +21,7 @@ export const getListPromotionCodeAPI = async () => {
     });
     
     // Log the entire response for debugging
-    console.log('Response from getListPromotionCodeAPI:', response.data);
+    //console.log('Response from getListPromotionCodeAPI:', response.data);
 
     // Check if the response contains items and is an array
     if (!response.data || !Array.isArray(response.data.items)) {
@@ -30,7 +30,7 @@ export const getListPromotionCodeAPI = async () => {
 
     // Extract the promotion codes from the items
     const promotionCodes = response.data.items.map(item => item.code);
-    console.log('Extracted promotion codes:', promotionCodes);
+    //console.log('Extracted promotion codes:', promotionCodes);
     return promotionCodes; // Return the array of promotion codes
   } catch (error) {
     console.error(`Error getting list promotion for code:`, error.response?.data || error.message || error);
@@ -50,7 +50,7 @@ export const getPromotionCodeAPI = async (code) => {
     });
     
     // Log the response for debugging
-    console.log(`Response from getPromotionCodeAPI for code ${code}:`, response.data);
+    //console.log(`Response from getPromotionCodeAPI for code ${code}:`, response.data);
 
     // Check if the response data is valid
     if (!response.data) {
