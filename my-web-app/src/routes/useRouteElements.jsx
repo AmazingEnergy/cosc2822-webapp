@@ -7,7 +7,9 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { getPayClientSecretAPI } from '../apis/cart.api.js';
 
-const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
+const testKey = import.meta.env.VITE_TEST_KEY
+console.log("testKey = " + testKey);
+const stripePromise = loadStripe(testKey);
 
 /**
  * @description
@@ -28,7 +30,9 @@ const ProductDetailPage = lazy(() => import("../pages/product/ProductDetail"));
 
 const CartPage = lazy(() => import("../pages/cart/ShoppingCart"));
 const CheckoutPage = lazy(() => import("../pages/cart/Checkout"));
-const PaymentPage = lazy(() => import("../pages/cart/Payment"));
+const ReturnPage = lazy(() => import("../pages/cart/Return"));
+
+//const PaymentPage = lazy(() => import("../pages/cart/Payment"));
 
 
 /**
@@ -169,17 +173,19 @@ const useRouteElements = () => {
           index: true,
           element: (
             <Suspense fallback={<Spinner />}>
-              <CheckoutPage />
+              {/* <Elements stripe={stripePromise} options={options}> */}
+                <CheckoutPage />
+              {/* </Elements> */}
             </Suspense>
           ),
         },
         {
-          path: "payment",
+          path: "return",
           index: true,
           element: (
             <Suspense fallback={<Spinner />}>
               <Elements stripe={stripePromise} options={options}>
-                <PaymentPage />
+                <ReturnPage />
               </Elements>
             </Suspense>
           ),

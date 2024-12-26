@@ -31,6 +31,8 @@ const LeftSide = ({ setActiveSection }) => {
 
     const handleLogout = () => {
         localStorage.removeItem('idToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('username');
         navigate("/"); // Redirect to homepage
         window.location.reload(); 
     };
