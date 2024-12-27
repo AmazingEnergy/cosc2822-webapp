@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
-import { getPayClientSecretAPI } from '../../../apis/cart.api.js';
+import { getPayClientSecretAPI, getPaymentAPI } from '../../../apis/cart.api.js';
 import { submitCart, loadCartFromAPI, clearCart } from '../../../redux/slices/cart.slice.js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useStripe, useElements, Elements, EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
@@ -24,6 +24,7 @@ const Payment = () => {
     const dispatch = useDispatch();
     const stripe = useStripe();
     const elements = useElements();
+
     const cartItems = useSelector((state) => state.cart.items || []);
     const cartId = localStorage.getItem("cartId");
 
@@ -50,6 +51,23 @@ const Payment = () => {
         }
     }, [fetchClientSecret, dispatch, cartId]);
 
+    const getPaymentStatus = async () => {
+        try {
+            const response = await getPaymentAPI(cartId, clientSecret);
+            console.log('Payment Status:', response);
+            // Check the payment status and handle it accordingly
+            if (response.payment_status === 'paid') {
+                setPaymentError("Payment has already been completed.");
+                return false; // Indicate that the payment is already completed
+            }
+            return true; // Indicate that the payment is valid for processing
+        } catch (error) {
+            console.error('Error fetching payment status:', error);
+            setPaymentError("Failed to fetch payment status.");
+            return false; // Indicate that there was an error
+        }
+    };
+
     const totalPrice = updatedCartItems.reduce((total, item) => {
         const price = parseFloat(item.productPrice) || 0;
         const quantity = parseInt(item.quantity, 10) || 0;
@@ -64,6 +82,12 @@ const Payment = () => {
         if (!stripe || !elements || !clientSecret) {
             setPaymentError("Stripe.js has not loaded yet or client secret is missing.");
             return;
+        }
+
+        // Check payment status before proceeding
+        const isPaymentValid = await getPaymentStatus();
+        if (!isPaymentValid) {
+            return; // Exit if the payment is not valid
         }
 
         setIsProcessing(true);
@@ -90,6 +114,7 @@ const Payment = () => {
             setIsProcessing(false);
         }
     };
+
 
     // Function to close the modal and redirect
     const handleContinueShopping = () => {

@@ -38,6 +38,20 @@ export const getPayClientSecretAPI = async (cartId) => {
   }
 };
 
+
+export const getPaymentAPI = async (cartId, sessionId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/carts/${cartId}/pay`, {
+      headers: getAuthHeaders(),
+      params: { sessionId }, 
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error getting payment's for cartId: ${cartId}:`, error.response?.data || error.message || error);
+    throw new Error("Unable to get payment. Please try again.");
+  }
+};
+
 /**
  * Get cart.
  * @returns {Promise<Object>} - API response data containing cart details.
