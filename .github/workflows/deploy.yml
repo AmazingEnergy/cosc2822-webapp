@@ -38,6 +38,7 @@ jobs:
           echo "VITE_AWS_REGION=${{ secrets.DEV_AWS_REGION }}" >> .env
           echo "VITE_AWS_CLIENT_ID=${{ secrets.DEV_CLIENT_ID }}" >> .env
           echo "VITE_AWS_CLIENT_SECRET=${{ secrets.DEV_CLIENT_SECRET }}" >> .env
+          echo "VITE_TEST_KEY=${{ secrets.DEV_STRIPE_PUBLIC_KEY }}" >> .env
 
       - name: Build project
         working-directory: ${{ env.WORKING_DIR }}
