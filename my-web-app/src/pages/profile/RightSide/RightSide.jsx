@@ -190,8 +190,8 @@ const RightSide = ({ activeSection }) => {
             >
                 <option value="all">All Orders</option>
                 <option value="new">New</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
+                <option value="completed">Completed</option>
+                <option value="rejected">Rejected</option>
                 <option value="cancelled">Cancelled</option>
             </select>
         </div>
