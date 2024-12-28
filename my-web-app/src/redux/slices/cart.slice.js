@@ -108,8 +108,6 @@ const cartSlice = createSlice({
         state.totalPrice = 0;
         state.status = 'succeeded';
         state.cartId = null; // Clear cartId if necessary
-        localStorage.removeItem('cartId');
-        localStorage.removeItem("checkoutData");
       })
       .addCase(submitCart.rejected, (state, action) => {
         console.error('Failed to submit cart:', action.payload);
