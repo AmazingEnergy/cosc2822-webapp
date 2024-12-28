@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
-import { getPayClientSecretAPI, getPaymentAPI } from '../../../apis/cart.api.js';
+import { getPayDataAPI, getPaymentAPI } from '../../../apis/cart.api.js';
 import { submitCart, loadCartFromAPI, clearCart } from '../../../redux/slices/cart.slice.js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useStripe, useElements, Elements, EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
@@ -18,7 +18,10 @@ const Payment = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [clientSecret, setClientSecret] = useState(null);
     const [loadingClientSecret, setLoadingClientSecret] = useState(true);
+    const [sessionId, setSessionId] = useState(null);
+    const [loadingSessionId, setLoadingSessionId] = useState(true);
     const [showEmbeddedCheckout, setShowEmbeddedCheckout] = useState(false);
+    const [isPayButtonClicked, setIsPayButtonClicked] = useState(false);
 
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -31,7 +34,7 @@ const Payment = () => {
     const fetchClientSecret = useCallback(async () => {
         if (!cartId) return;
         try {
-            const response = await getPayClientSecretAPI(cartId);
+            const response = await getPayDataAPI(cartId);
             if (response.clientSecret) {
                 setClientSecret(response.clientSecret);
             } else {
@@ -51,20 +54,49 @@ const Payment = () => {
         }
     }, [fetchClientSecret, dispatch, cartId]);
 
+    const fetchSesionId = useCallback(async () => {
+        if (!cartId) return;
+        try {
+            const response = await getPayDataAPI(cartId);
+            if (response.sessionId) {
+                setSessionId(response.sessionId);
+            } else {
+                setPaymentError("SessionId is missing.");
+            }
+        } catch (error) {
+            setPaymentError("Failed to fetch payment information.");
+        } finally {
+            setLoadingSessionId(false);
+        }
+    }, [cartId]);
+
+    useEffect(() => {
+        fetchSesionId();
+        if (cartId) {
+            dispatch(loadCartFromAPI());
+        }
+    }, [fetchSesionId, dispatch, cartId]);
+
     const getPaymentStatus = async () => {
         try {
-            const response = await getPaymentAPI(cartId, clientSecret);
-            console.log('Payment Status:', response);
-            // Check the payment status and handle it accordingly
+            const response = await getPaymentAPI(cartId, sessionId);
+            
+            // Log the entire response for debugging
+            console.log('Payment Status Response:', response);
+    
+            // Check the payment status
             if (response.payment_status === 'paid') {
-                setPaymentError("Payment has already been completed.");
-                return false; // Indicate that the payment is already completed
+                console.log('Payment status is paid.');
+                return true; // Payment is valid for processing
+            } else {
+                console.log('Payment status is not paid. Cannot proceed with processing.');
+                setPaymentError("Payment is not completed. Please complete the payment before submitting the cart.");
+                return false; // Payment is not valid for processing
             }
-            return true; // Indicate that the payment is valid for processing
         } catch (error) {
             console.error('Error fetching payment status:', error);
             setPaymentError("Failed to fetch payment status.");
-            return false; // Indicate that there was an error
+            return false; // Error occurred
         }
     };
 
@@ -73,26 +105,29 @@ const Payment = () => {
         const quantity = parseInt(item.quantity, 10) || 0;
         return total + price * quantity;
     }, 0);
-    const handlePayClick = () => {
-        setShowEmbeddedCheckout(true);
-    };
 
     const handleConfirmation = async (event) => {
         event.preventDefault();
+    
+        if (!isPayButtonClicked) {
+            setPaymentError("Please click the Pay button to proceed with payment.");
+            return; // Exit if the pay button has not been clicked
+        }
+    
         if (!stripe || !elements || !clientSecret) {
             setPaymentError("Stripe.js has not loaded yet or client secret is missing.");
             return;
         }
-
-        // Check payment status before proceeding
+    
         const isPaymentValid = await getPaymentStatus();
         if (!isPaymentValid) {
+            console.log('Payment is not valid. Exiting confirmation.');
             return; // Exit if the payment is not valid
         }
-
+    
         setIsProcessing(true);
         setPaymentError(null);
-
+    
         try {
             const payload = {
                 cartId,
@@ -102,19 +137,16 @@ const Payment = () => {
                 contactPhone,
                 promotionCode,
             };
-
+    
             await dispatch(submitCart(payload)).unwrap();
-            setIsModalOpen(true);
-            localStorage.removeItem("checkoutData");
-            localStorage.removeItem("cartId");
             dispatch(clearCart());
+            // Optionally, show a success modal or redirect
         } catch (error) {
             setPaymentError("There was an error processing your payment.");
         } finally {
             setIsProcessing(false);
         }
     };
-
 
     // Function to close the modal and redirect
     const handleContinueShopping = () => {
@@ -125,6 +157,11 @@ const Payment = () => {
     const handleViewOrder = () => {
         setIsModalOpen(false);
         navigate("/profile");
+    };
+
+    const handlePayClick = () => {
+        setIsPayButtonClicked(true); 
+        setShowEmbeddedCheckout(true);
     };
 
     return (
