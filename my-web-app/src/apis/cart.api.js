@@ -22,19 +22,29 @@ const getAuthHeaders = () => {
  * @param {string} cartId - The ID of the cart.
  * @returns {Promise<Object>} - Returns the client secret for Stripe payment.
  */
-export const getPayClientSecretAPI = async (cartId) => {
-  //const returnUrl = `checkout`; 
-
+export const getPayDataAPI = async (cartId) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/pay`, {
-      // returnUrl, // Include the returnUrl in the request body
-    }, {
+    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/pay`,{}, {
       headers: getAuthHeaders(),
     });
     return response.data;
   } catch (error) {
-    console.error(`Error getting payment's client secret for cartId: ${cartId}:`, error.response?.data || error.message || error);
-    throw new Error("Unable to get payment's client secret. Please try again.");
+    console.error(`Error getting payment's data for cartId: ${cartId}:`, error.response?.data || error.message || error);
+    throw new Error("Unable to get payment's data. Please try again.");
+  }
+};
+
+
+export const getPaymentAPI = async (cartId, sessionId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/carts/${cartId}/pay`, {
+      headers: getAuthHeaders(),
+      params: { sessionId }, 
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error getting payment's for cartId: ${cartId}:`, error.response?.data || error.message || error);
+    throw new Error("Unable to get payment. Please try again.");
   }
 };
 
@@ -181,11 +191,11 @@ export const updateItemQuantityAPI = async (cartId, skuId, quantity, discountPri
 export const submitCartAPI = async (cartId, { contactName, email, address, contactPhone, promotionCode }) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/submit`, {
-      contactName, // Ensure this matches what the API expects
-      contactEmail: email, // Map email to contactEmail
+      contactName, 
+      contactEmail: email, 
       deliveryAddress: address,
       contactPhone:  contactPhone,
-      promotionCode: promotionCode
+      //promotionCode: promotionCode === '' ? null : promotionCode
     }, {
       headers: getAuthHeaders(),
     });

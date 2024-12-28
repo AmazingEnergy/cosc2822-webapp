@@ -3,8 +3,6 @@ import { PATH } from "../paths";
 import React, { Suspense, lazy, useState, useEffect, useCallback } from "react";
 import Spinner from "../components/Spinner";
 import MainLayout from "../layouts/MainLayout";
-import { getPayClientSecretAPI } from '../apis/cart.api.js';
-
 
 /**
  * @description
@@ -43,27 +41,7 @@ const PaymentPage = lazy(() => import("../pages/cart/Payment"));
  */
 
 const useRouteElements = () => {
-  const [clientSecret, setClientSecret] = useState(null);
-  const cartId = localStorage.getItem("cartId");
 
-  const fetchClientSecret = useCallback(async () => {
-    try {
-      const response = await getPayClientSecretAPI(cartId); // Call the getPayAPI function
-      setClientSecret(response.clientSecret); // Set the client secret
-    } catch (error) {
-      console.error('Error fetching client secret:', error.message);
-    }
-  }, [cartId]);
-
-  useEffect(() => {
-    if (cartId) {
-      fetchClientSecret(); // Fetch client secret when cartId is available
-    }
-  }, [fetchClientSecret, cartId]);
-
-  const options = {
-    clientSecret: clientSecret, // Use the client secret obtained from the server
-  };
   const elements = useRoutes([
     {
       path: PATH.HOME,

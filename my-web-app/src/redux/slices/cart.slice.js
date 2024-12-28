@@ -102,11 +102,14 @@ const cartSlice = createSlice({
       })
       .addCase(submitCart.fulfilled, (state, action) => {
         // Handle successful submission
-        //console.log('Cart submitted successfully:', action.payload);
+        console.log('Cart submitted successfully:', action.payload);
         state.items = []; // Clear items after successful submission
         state.totalQuantity = 0;
         state.totalPrice = 0;
         state.status = 'succeeded';
+        state.cartId = null; // Clear cartId if necessary
+        localStorage.removeItem('cartId');
+        localStorage.removeItem("checkoutData");
       })
       .addCase(submitCart.rejected, (state, action) => {
         console.error('Failed to submit cart:', action.payload);
@@ -193,19 +196,6 @@ export const updateItemQuantity = createAsyncThunk(
     }
   }
 );
-
-// export const payCart = createAsyncThunk(
-//   'cart/pay',
-//   async ({ cartId, paymentDetails }, { rejectWithValue }) => {
-//     try {
-//       const response = await payCartAPI(cartId, paymentDetails);
-//       return response.data;
-//     } catch (error) {
-//       console.error('Error processing payment:', error);
-//       return rejectWithValue(error.response?.data || error.message);
-//     }
-//   }
-// );
 
 export const submitCart = createAsyncThunk(
   'cart/submitCart',
