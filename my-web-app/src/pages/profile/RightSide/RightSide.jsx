@@ -24,6 +24,14 @@ const RightSide = ({ activeSection }) => {
     const [selectedOrderId, setSelectedOrderId] = useState(null);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
+    const [orderStatusFilter, setOrderStatusFilter] = useState('all'); // Default to 'all'
+
+    const filteredOrders = () => {
+        if (orderStatusFilter === 'all') {
+            return orders; // Return all orders if 'all' is selected
+        }
+        return orders.filter(order => order.status === orderStatusFilter); // Filter by selected status
+    };
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -171,6 +179,24 @@ const RightSide = ({ activeSection }) => {
         }
     };
 
+    const renderOrderFilter = () => (
+        <div className="mb-4">
+            <label htmlFor="orderStatus" className="block text-sm font-medium text-gray-700">Filter by Order Status:</label>
+            <select
+                id="orderStatus"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+            >
+                <option value="all">All Orders</option>
+                <option value="new">New</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+    );
+
     const handleOrderClick = async (orderId) => {
         if (selectedOrderId === orderId) {
             setSelectedOrderId(null);
@@ -317,12 +343,13 @@ const RightSide = ({ activeSection }) => {
         <div className="w-full space-y-4">
             <div className="bg-white p-4 shadow rounded-lg">
                 <h1 className="text-2xl font-semibold text-gray-800 text-center">My Orders</h1>
+                {renderOrderFilter()}
             </div>
             {loadingOrders ? (
                 <p className="text-lg text-gray-600 text-center">Loading orders...</p>
-            ) : orders.length > 0 ? (
+            ) : filteredOrders().length > 0 ? (
                 <div className="space-y-4">
-                    {orders.map((order) => (
+                    {filteredOrders().map((order) => (
                         <div key={order.id} className="bg-white shadow-lg p-4 rounded-xl space-y-2 cursor-pointer" onClick={() => handleOrderClick(order.id)}>
                             <div className="flex justify-between items-center">
                                 <p className="text-lg font-semibold text-gray-600">Order Number:</p>
