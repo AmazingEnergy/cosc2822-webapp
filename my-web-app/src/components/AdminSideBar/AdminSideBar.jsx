@@ -13,7 +13,7 @@ const AdminSideBar = () => {
         msUserSelect: "none",
       }}
     >
-      <nav className="mt-6 space-y-16">
+      <nav className="mt-6 space-y-4">
         <h2
           className="flex items-center  text-black font-semibold hover:text-white hover:bg-[#D68157] p-2 rounded transition duration-300"
           onClick={() => navigate("/admin/products")}
