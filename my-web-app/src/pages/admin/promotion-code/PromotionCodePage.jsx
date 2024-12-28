@@ -17,47 +17,48 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import useAuth from "../../../hooks/useAuth";
 
-const Products = () => {
+const PromotionCodePage = () => {
   const { isAuthenticated, userRole } = useAuth();
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
+  const [promotions, setPromotions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchProducts = async () => {
-    await axios
-      .get("https://service.dev.grp6asm3.com/products")
-      .then((response) => {
-        const apiProducts = response.data.items.map((item, index) => ({
-          id: index + 1,
-          name: item.name,
-          category: item.category,
-          type: item.type,
-          price: item.price,
-          skuId: item.skuId,
-        }));
-        setProducts(apiProducts);
-      })
-      .catch((error) => {
-        console.error("Error fetching products:", error);
-      });
+  const fetchPromotions = async () => {
+    try {
+      const response = await axios.get(
+        "https://service.dev.grp6asm3.com/promotion/codes"
+      );
+      const apiPromotions = response.data.items.map((item, index) => ({
+        id: index + 1,
+        name: item.name,
+        code: item.code,
+        quantity: item.quantity,
+        availableFrom: new Date(item.availableFrom).toLocaleDateString(),
+        availableTo: new Date(item.availableTo).toLocaleDateString(),
+        discount: (item.discount * 100).toFixed(2) + "%",
+      }));
+      setPromotions(apiPromotions);
+    } catch (error) {
+      console.error("Error fetching promotions:", error);
+    }
   };
 
   useEffect(() => {
     if (isAuthenticated && userRole !== undefined) {
       if (userRole === "admin") {
-        fetchProducts();
+        fetchPromotions();
       } else {
         navigate("/");
       }
     }
   }, [isAuthenticated, userRole, navigate]);
 
-  const handleCreateProduct = () => {
-    navigate("/admin/create-product");
+  const handleCreatePromotion = () => {
+    navigate("/admin/create-promotion-code");
   };
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPromotions = promotions.filter((promotion) =>
+    promotion.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -74,14 +75,10 @@ const Products = () => {
           mb={3}
         >
           <Typography variant="h4" gutterBottom>
-            Products
+            Promotions
           </Typography>
-          <Button
-            variant="contained"
-            // color="secondary"
-            onClick={handleCreateProduct}
-          >
-            + Create Product
+          <Button variant="contained" onClick={handleCreatePromotion}>
+            + Create Promotion
           </Button>
         </Box>
 
@@ -89,7 +86,7 @@ const Products = () => {
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Search by product name ..."
+          placeholder="Search by promotion name ..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           sx={{ marginBottom: 3 }}
@@ -101,36 +98,32 @@ const Products = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Name</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Price ($)</TableCell>
+                <TableCell>Code</TableCell>
+                <TableCell>Quantity</TableCell>
+                <TableCell>Available From</TableCell>
+                <TableCell>Available To</TableCell>
+                <TableCell>Discount</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <Button
-                      variant="text"
-                      color="primary"
-                      onClick={() =>
-                        navigate(`/admin/products/${product.skuId}`)
-                      }
-                    >
-                      {product.name}
-                    </Button>
-                  </TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>{product.type}</TableCell>
-                  <TableCell>{product.price.toFixed(2)}</TableCell>
+              {filteredPromotions.map((promotion) => (
+                <TableRow key={promotion.id}>
+                  <TableCell>{promotion.name}</TableCell>
+                  <TableCell>{promotion.code}</TableCell>
+                  <TableCell>{promotion.quantity}</TableCell>
+                  <TableCell>{promotion.availableFrom}</TableCell>
+                  <TableCell>{promotion.availableTo}</TableCell>
+                  <TableCell>{promotion.discount}</TableCell>
                   <TableCell>
                     <Button
                       variant="contained"
-                      color="error"
-                      onClick={() => console.log("Delete product:", product.id)}
+                      color="primary"
+                      onClick={() =>
+                        navigate(`/admin/promotion-codes/${promotion.code}`)
+                      }
                     >
-                      Delete
+                      Edit
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -143,4 +136,4 @@ const Products = () => {
   );
 };
 
-export default Products;
+export default PromotionCodePage;

@@ -26,6 +26,12 @@ const AdminSideBar = () => {
         >
           Orders
         </h2>
+        <h2
+          className="flex items-center text-black font-semibold hover:text-white hover:bg-[#D68157] p-2 rounded transition duration-300"
+          onClick={() => navigate("/admin/promotion-codes")}
+        >
+          Promotion Codes
+        </h2>
       </nav>
     </aside>
   );
