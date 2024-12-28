@@ -25,6 +25,9 @@ const ProductDetailPage = lazy(() => import("../pages/product/ProductDetail"));
 const UpdateInventoryPage = lazy(() => import("../pages/admin/update-inventory"));
 const AdminOrdersPage = lazy(() => import("../pages/admin/orders/Orders"));
 const OrderDetailAdminPage = lazy(() => import("../pages/admin/order-details-admin/OrderDetailAdmin"));
+const PromotionCodePage = lazy(() =>import("../pages/admin/promotion-code/PromotionCodePage.jsx"));
+const UpdatePromotionCodePage = lazy(() =>import("../pages/admin/update-promotion-code/UpdatePromotionCodePage.jsx"));
+const CreatePromotionCodePage = lazy(() =>import("../pages/admin/create-promotion-code/CreatePromotionCodePage.jsx"));
 
 const CartPage = lazy(() => import("../pages/cart/ShoppingCart"));
 const CheckoutPage = lazy(() => import("../pages/cart/Checkout"));
@@ -261,6 +264,45 @@ const useRouteElements = () => {
           element: (
             <Suspense fallback={<Spinner />}>
               <OrderDetailAdminPage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.ADMINPROMOTIONCODE,
+      element: <MainLayout />,
+      children: [
+        {
+          path: "",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <PromotionCodePage />
+            </Suspense>
+          ),
+        },
+        {
+          path: ":code",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <UpdatePromotionCodePage />
+            </Suspense>
+          ),
+        },
+      ],
+    },
+    {
+      path: PATH.ADMINCREATEPROMTIONCODE,
+      element: <MainLayout />,
+      children: [
+        {
+          path: "",
+          index: true,
+          element: (
+            <Suspense fallback={<Spinner />}>
+              <CreatePromotionCodePage />
             </Suspense>
           ),
         },

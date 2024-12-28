@@ -11,4 +11,6 @@ export const PATH = {
   CART: "/carts",
   UPDATEINVENTORY: "/admin/update-inventory",
   ADMINORDERS: "/admin/orders",
+  ADMINPROMOTIONCODE: "/admin/promotion-codes",
+  ADMINCREATEPROMTIONCODE: "/admin/create-promotion-code",
 };
