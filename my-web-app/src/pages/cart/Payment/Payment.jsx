@@ -31,33 +31,17 @@ const Payment = () => {
     const cartItems = useSelector((state) => state.cart.items || []);
     const cartId = localStorage.getItem("cartId");
 
-    const fetchClientSecret = useCallback(async () => {
+    const fetchPaymentData = useCallback(async () => {
         if (!cartId) return;
         try {
             const response = await getPayDataAPI(cartId);
+
             if (response.clientSecret) {
                 setClientSecret(response.clientSecret);
             } else {
                 setPaymentError("Client secret is missing.");
             }
-        } catch (error) {
-            setPaymentError("Failed to fetch payment information.");
-        } finally {
-            setLoadingClientSecret(false);
-        }
-    }, [cartId]);
 
-    useEffect(() => {
-        fetchClientSecret();
-        if (cartId) {
-            dispatch(loadCartFromAPI());
-        }
-    }, [fetchClientSecret, dispatch, cartId]);
-
-    const fetchSesionId = useCallback(async () => {
-        if (!cartId) return;
-        try {
-            const response = await getPayDataAPI(cartId);
             if (response.sessionId) {
                 setSessionId(response.sessionId);
             } else {
@@ -66,24 +50,25 @@ const Payment = () => {
         } catch (error) {
             setPaymentError("Failed to fetch payment information.");
         } finally {
+            setLoadingClientSecret(false);
             setLoadingSessionId(false);
         }
     }, [cartId]);
 
     useEffect(() => {
-        fetchSesionId();
+        fetchPaymentData();
         if (cartId) {
             dispatch(loadCartFromAPI());
         }
-    }, [fetchSesionId, dispatch, cartId]);
+    }, [fetchPaymentData, dispatch, cartId]);
 
     const getPaymentStatus = async () => {
         try {
             const response = await getPaymentAPI(cartId, sessionId);
-            
+
             // Log the entire response for debugging
             console.log('Payment Status Response:', response);
-    
+
             // Check the payment status
             if (response.payment_status === 'paid') {
                 console.log('Payment status is paid.');
@@ -108,26 +93,26 @@ const Payment = () => {
 
     const handleConfirmation = async (event) => {
         event.preventDefault();
-    
+
         if (!isPayButtonClicked) {
             setPaymentError("Please click the Pay button to proceed with payment.");
             return; // Exit if the pay button has not been clicked
         }
-    
+
         if (!stripe || !elements || !clientSecret) {
             setPaymentError("Stripe.js has not loaded yet or client secret is missing.");
             return;
         }
-    
+
         const isPaymentValid = await getPaymentStatus();
         if (!isPaymentValid) {
             console.log('Payment is not valid. Exiting confirmation.');
             return; // Exit if the payment is not valid
         }
-    
+
         setIsProcessing(true);
         setPaymentError(null);
-    
+
         try {
             const payload = {
                 cartId,
@@ -137,10 +122,12 @@ const Payment = () => {
                 contactPhone,
                 promotionCode,
             };
-    
+
             await dispatch(submitCart(payload)).unwrap();
+            localStorage.removeItem('cartId');
+            localStorage.removeItem("checkoutData");
             dispatch(clearCart());
-            // Optionally, show a success modal or redirect
+            setIsModalOpen(true);
         } catch (error) {
             setPaymentError("There was an error processing your payment.");
         } finally {
@@ -160,7 +147,7 @@ const Payment = () => {
     };
 
     const handlePayClick = () => {
-        setIsPayButtonClicked(true); 
+        setIsPayButtonClicked(true);
         setShowEmbeddedCheckout(true);
     };
 
@@ -296,55 +283,55 @@ const Payment = () => {
 
                     {/* Total Row */}
                     <div className="flex justify-between pt-4 border-t">
-                    <span className="font-semibold text-lg">Total</span>
-                    <span className="font-bold text-lg">${totalPrice.toFixed(2)}</span>
-                </div>
+                        <span className="font-semibold text-lg">Total</span>
+                        <span className="font-bold text-lg">${totalPrice.toFixed(2)}</span>
+                    </div>
 
 
-                {/* Modal */}
-                {isModalOpen && (
-                    <div
-                        className="fixed inset-0 bg-[#F9F1E7] bg-opacity-80 flex justify-center items-center z-50 transition-opacity duration-300"
-                        role="dialog"
-                        aria-labelledby="modalTitle"
-                        aria-hidden={!isModalOpen}
-                    >
-                        <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md flex flex-col items-center justify-center space-y-6 transform transition-transform duration-300">
-                            <div>
-                                <img
-                                    className="h-24 w-24"
-                                    src="/assets/check.png"
-                                    alt="Checkmark Icon"
-                                />
-                            </div>
-                            <h2
-                                id="modalTitle"
-                                className="text-2xl text-[#008080] font-bold text-center"
-                            >
-                                Thank You For Your Order
-                            </h2>
-                            <p className="text-center text-gray-700">
-                                Your order has been successfully placed. You can continue shopping or review your orders.
-                            </p>
-                            <div className="flex flex-row space-x-4">
-                                <button
-                                    onClick={handleContinueShopping}
-                                    className="bg-[#E89F71] text-white px-6 py-2 rounded-md hover:bg-orange-500 transition duration-200"
+                    {/* Modal */}
+                    {isModalOpen && (
+                        <div
+                            className="fixed inset-0 bg-[#F9F1E7] bg-opacity-80 flex justify-center items-center z-50 transition-opacity duration-300"
+                            role="dialog"
+                            aria-labelledby="modalTitle"
+                            aria-hidden={!isModalOpen}
+                        >
+                            <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md flex flex-col items-center justify-center space-y-6 transform transition-transform duration-300">
+                                <div>
+                                    <img
+                                        className="h-24 w-24"
+                                        src="/assets/check.png"
+                                        alt="Checkmark Icon"
+                                    />
+                                </div>
+                                <h2
+                                    id="modalTitle"
+                                    className="text-2xl text-[#008080] font-bold text-center"
                                 >
-                                    Continue Shopping
-                                </button>
-                                <button
-                                    onClick={handleViewOrder}
-                                    className="bg-[#baa190] text-gray-600 px-6 py-2 rounded-md hover:bg-[#d1b7a0] transition duration-200"
-                                >
-                                    View Order
-                                </button>
+                                    Thank You For Your Order
+                                </h2>
+                                <p className="text-center text-gray-700">
+                                    Your order has been successfully placed. You can continue shopping or review your orders.
+                                </p>
+                                <div className="flex flex-row space-x-4">
+                                    <button
+                                        onClick={handleContinueShopping}
+                                        className="bg-[#E89F71] text-white px-6 py-2 rounded-md hover:bg-orange-500 transition duration-200"
+                                    >
+                                        Continue Shopping
+                                    </button>
+                                    <button
+                                        onClick={handleViewOrder}
+                                        className="bg-[#baa190] text-gray-600 px-6 py-2 rounded-md hover:bg-[#d1b7a0] transition duration-200"
+                                    >
+                                        View Order
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
-        </div>
         </div >
     );
 };
