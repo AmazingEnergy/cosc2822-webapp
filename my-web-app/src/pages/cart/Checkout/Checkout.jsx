@@ -80,8 +80,10 @@ const Checkout = () => {
     if (!contactPhone) {
       isValid = false;
       errorMessages.phone = "Phone number is required";
+    } else if (!/^\d{9}$/.test(contactPhone)) { // Check for a valid 9-digit phone number
+      isValid = false;
+      errorMessages.phone = "Phone number must be exactly 9 digits";
     }
-
     setErrors(errorMessages);
     setIsFormValid(isValid);
     return isValid;
@@ -92,24 +94,24 @@ const Checkout = () => {
       setPromotionError(''); // Clear any previous error
       return; // No promotion code to apply
     }
-  
+
     try {
       // Step 1: Get the list of valid promotion codes
       const promotionItems = await getListPromotionCodeAPI();
-      
+
       // Step 2: Check if the entered code is valid
       if (!promotionItems.includes(code)) {
         setPromotionError('Invalid promotion code. Please try again.');
         setSuccessMessage(''); // Clear success message
         return;
       }
-  
+
       // Step 3: Call the API to get promotion details
       const promotionDetails = await getPromotionCodeAPI(code);
-      
+
       // Step 4: Calculate the discount based on promotion details
       const discountPercentage = promotionDetails.discount; // e.g., 0.05 for 5%
-      
+
       // Step 5: Update product prices based on the discount
       const newCartItems = cartItems.map(item => {
         const originalPrice = parseFloat(item.productPrice) || 0;
@@ -121,14 +123,14 @@ const Checkout = () => {
           discountPrice: newPrice // Optionally store the new price as discountPrice
         };
       });
-  
+
       // Step 6: Call updateItemQuantityAPI for each item
       for (const item of newCartItems) {
-        const updatedQuantity = item.quantity; 
+        const updatedQuantity = item.quantity;
         const discountPrice = item.productPrice; // Pass the updated price as discountPrice
         await updateItemQuantityAPI(cartId, item.skuId, updatedQuantity, discountPrice); // Ensure skuId is correct
       }
-  
+
       // Update the state with the new cart items
       setUpdatedCartItems(newCartItems);
       setSuccessMessage('Promotion code applied successfully!'); // Set success message
@@ -139,7 +141,7 @@ const Checkout = () => {
       setSuccessMessage(''); // Clear success message
     }
   };
-  
+
   const handleMoveToPaymentProcess = (event) => {
     event.preventDefault();
 
@@ -170,8 +172,8 @@ const Checkout = () => {
             <h2 className="text-lg font-bold mb-2">Contact Information</h2>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <input
-                type="text" 
-                placeholder="Email"
+                type="text"
+                placeholder="johndoe@gmail.com"
                 className={`w-full border ${errors.email ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
                 value={email}
                 onChange={handleInputChange(setEmail)}
@@ -179,7 +181,7 @@ const Checkout = () => {
               {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
               <input
                 type="text"
-                placeholder="Phone number"
+                placeholder="Phone number (9 digits)"
                 className={`w-full border ${errors.phone ? 'border-red-500' : 'border-gray-300'} p-2 rounded-md`}
                 value={contactPhone}
                 onChange={handleInputChange(setContactPhone)}
@@ -230,7 +232,7 @@ const Checkout = () => {
                 value={promotionCode}
                 onChange={handleInputChange(setPromotionCode)}
               />
-  
+
               <button
                 className="ml-4 px-4 py-2 bg-[#E89F71] text-white hover:bg-orange-500"
                 onClick={() => handleApplyCode(promotionCode)}

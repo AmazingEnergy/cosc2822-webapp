@@ -24,12 +24,27 @@ const getAuthHeaders = () => {
  */
 export const getPayDataAPI = async (cartId) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/pay`,{}, {
+    const response = await axios.post(`${API_BASE_URL}/carts/${cartId}/pay`, {}, {
       headers: getAuthHeaders(),
     });
     return response.data;
   } catch (error) {
+    // Log the error for debugging
     console.error(`Error getting payment's data for cartId: ${cartId}:`, error.response?.data || error.message || error);
+
+    // Check if the error response contains specific information
+    if (error.response && error.response.status === 400) {
+      const errorMessage = error.response.data?.msg || 'An error occurred';
+      
+      // Handle specific error case
+      if (errorMessage === 'Cart has been submitted') {
+        // Optionally, you can delete the cartId or perform other actions here
+        console.warn(`Cart ID ${cartId} has been submitted. Deleting cart ID.`);
+        // deleteCartId(cartId); // Uncomment and implement this function if needed
+      }
+    }
+
+    // Throw a generic error message to the caller
     throw new Error("Unable to get payment's data. Please try again.");
   }
 };
@@ -109,9 +124,6 @@ export const addItemToCartAPI = async (cartId, newItem) => {
       cartId = newCart.id;  // Set the new cartId
       console.log('New cart created with ID:', cartId);
     }
-
-    // Log the cartId before making the request to ensure it's valid
-    //console.log('Using cartId:', cartId);
 
     // Add item to the cart using the API
     const response = await axios.post(
@@ -195,7 +207,7 @@ export const submitCartAPI = async (cartId, { contactName, email, address, conta
       contactEmail: email, 
       deliveryAddress: address,
       contactPhone:  contactPhone,
-      //promotionCode: promotionCode === '' ? null : promotionCode
+      promotionCode: promotionCode === '' ? null : promotionCode
     }, {
       headers: getAuthHeaders(),
     });
