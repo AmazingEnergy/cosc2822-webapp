@@ -1,13 +1,8 @@
 //import React from 'react'
 import ReactDOM from 'react-dom/client'
-
-//import 'animate.css';
 import './styles/index.scss'
 import '@fontsource/akshar';
 import '@fontsource-variable/inter';
-
-
-
 import App from './App.jsx'
 
 import { BrowserRouter } from 'react-router-dom'
