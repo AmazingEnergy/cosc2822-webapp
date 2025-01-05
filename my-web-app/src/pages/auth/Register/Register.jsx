@@ -161,7 +161,7 @@ const Register = () => {
                     <form onSubmit={handleConfirm}>
                         <div className="mb-4">
                             <img src="./assets/email.png" className="h-[177px] w-[212px] mx-auto mb-4" alt="Email Confirmation" />
-                            <h2 className="text-xl font-akshar font-bold text-[#353535] text-[30px] pt-3 mb-4">Email Confirmation</h2>
+                            <h2 className="text-xl text-center font-akshar font-bold text-[#353535] text-[30px] pt-3 mb-4">Email Confirmation</h2>
 
                             <label htmlFor="confirmationCode" className="block text-sm font-intel text-[#333]">Confirmation Code</label>
                             <input
