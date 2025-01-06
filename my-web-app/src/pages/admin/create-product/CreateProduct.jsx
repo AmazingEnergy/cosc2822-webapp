@@ -121,20 +121,7 @@ const CreateProduct = () => {
 
       if (response.status === 200 || response.status === 201) {
         alert("Product created successfully!");
-        setProduct({
-          name: "",
-          description: "",
-          skuId: "",
-          parentSkuId: "",
-          category: "",
-          type: "",
-          price: "",
-          imageFiles: [],
-          stockCode: "",
-          isActive: true,
-          layer1: { name: "", value: "" },
-          layer2: { name: "", value: "" },
-        });
+        navigate("/admin/products");
       } else {
         alert("Failed to create product.");
       }
