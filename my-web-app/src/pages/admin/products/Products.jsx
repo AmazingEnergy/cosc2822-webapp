@@ -60,6 +60,7 @@ const Products = () => {
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+
   return (
     <Box display="flex" minHeight="100vh">
       {/* Sidebar */}
@@ -104,7 +105,6 @@ const Products = () => {
                 <TableCell>Category</TableCell>
                 <TableCell>Type</TableCell>
                 <TableCell>Price ($)</TableCell>
-                <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -124,15 +124,6 @@ const Products = () => {
                   <TableCell>{product.category}</TableCell>
                   <TableCell>{product.type}</TableCell>
                   <TableCell>{product.price.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      onClick={() => console.log("Delete product:", product.id)}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
