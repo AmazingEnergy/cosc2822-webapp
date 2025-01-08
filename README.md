@@ -5,7 +5,7 @@
 - **S3 Hosted URL:** [http://app.dev.grp6asm3.com.s3-website-ap-southeast-1.amazonaws.com](http://app.dev.grp6asm3.com.s3-website-ap-southeast-1.amazonaws.com)
 
 ## Introduction
-EASYSTORE is a cloud-based application developed to address the growing need for a modern, scalable, and efficient retail solution. The platform enables customers to browse products, add items to their carts, and complete purchases seamlessly while providing shop managers with tools for inventory management and order processing. Built with microservices architecture and powered by AWS-managed services, EASYSTORE ensures high availability, scalability, and operational efficiency with minimal human intervention.
+- EASYSTORE is a cloud-based application developed to address the growing need for a modern, scalable, and efficient retail solution. The platform enables customers to browse products, add items to their carts, and complete purchases seamlessly while providing shop managers with tools for inventory management and order processing. Built with microservices architecture and powered by AWS-managed services, EASYSTORE ensures high availability, scalability, and operational efficiency with minimal human intervention.
 ---
 
 ## Project Information
