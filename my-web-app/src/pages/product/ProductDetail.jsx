@@ -9,7 +9,7 @@ import './product.scss';
 
 const ProductDetail = () => {
   const { skuId } = useParams(); // skuId from the URL params
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userRole } = useAuth();
   const [product, setProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,7 +45,7 @@ const ProductDetail = () => {
   if (!product) return <div>No product found</div>;
 
   const handleAddToCart = () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || userRole === 'admin') {
       setIsModalOpen(true);
       return;
     }
@@ -143,35 +143,41 @@ const ProductDetail = () => {
 
        {/* Modal */}
        {isModalOpen && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg p-8 shadow-lg max-w-sm w-full">
-              {/* Close Button */}
-              <div className='flex justify-end'>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  viewBox="0 0 512 512" 
-                  className='h-6 w-6 cursor-pointer' 
-                  onClick={handleCloseModal}
-                >
-                  <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z"/>
-                </svg>
-              </div>
-              
-              {/* Modal Title */}
-              <h2 className='font-akshar text-[30px] text-center mb-4'>Please Log In</h2>
-              
-              {/* Modal Message */}
-              <p className='font-intel text-sm text-center mb-6'>You need to be logged in to add products to the cart.</p>
-              
-              {/* Log In Button */}
-              <div className="flex justify-center">
-                <Link to="/login"> 
-                  <button className="font-intel login-btn bg-[#D07373] text-white px-4 py-2 rounded-lg hover:bg-[#B55E5E] transition duration-300">Log In</button>
-                </Link>
-              </div>
-            </div>
-          </div>
-          )}
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white rounded-lg p-8 shadow-lg max-w-sm w-full">
+      {/* Close Button */}
+      <div className="flex justify-end">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 512 512"
+          className="h-6 w-6 cursor-pointer"
+          onClick={handleCloseModal}
+          aria-label="Close Modal"
+        >
+          <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z" />
+        </svg>
+      </div>
+
+      {/* Modal Content */}
+      <h2 className="font-akshar text-[30px] text-center mb-4">Please Log In</h2>
+      <p className="font-intel text-sm text-center mb-6">
+        {userRole === 'admin'
+          ? 'You need to be logged in to a customer account to add products to the cart.'
+          : 'You need to be logged in to add products to the cart.'}
+      </p>
+
+      {/* Log In Button */}
+      <div className="flex justify-center">
+        <Link to="/login">
+          <button className="font-intel login-btn bg-[#D07373] text-white px-4 py-2 rounded-lg hover:bg-[#B55E5E] transition duration-300">
+            Log In
+          </button>
+        </Link>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
