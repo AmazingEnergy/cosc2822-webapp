@@ -11,7 +11,7 @@ const CreatePromotionCodePage = () => {
   const token = localStorage.getItem("idToken");
 
   const [promotion, setPromotion] = useState({
-    code: "", 
+    code: "",
     name: "",
     quantity: 0,
     availableFrom: "",
@@ -41,7 +41,7 @@ const CreatePromotionCodePage = () => {
       };
 
       await axios.post(
-        "https://service.dev.grp6asm3.com/promotion/codes",
+        "https://service.sandbox.grp6asm3.com/promotion/codes",
         newPromotionData,
         {
           headers: {
@@ -56,7 +56,6 @@ const CreatePromotionCodePage = () => {
       alert("Failed to create promotion code.");
     }
   };
-  
 
   return (
     <Box display="flex" minHeight="100vh">

@@ -16,19 +16,19 @@ const UpdateInventoryPage = () => {
 
   const { isAuthenticated, userRole } = useAuth();
 
-    useEffect(() => {
-      if (isAuthenticated && userRole !== undefined) {
-        if (userRole !== "admin") {
-          navigate("/");
-        }
+  useEffect(() => {
+    if (isAuthenticated && userRole !== undefined) {
+      if (userRole !== "admin") {
+        navigate("/");
       }
-    }, [isAuthenticated, userRole, navigate]);
+    }
+  }, [isAuthenticated, userRole, navigate]);
 
   useEffect(() => {
     const fetchInventory = async () => {
       try {
         const response = await axios.get(
-          `https://service.dev.grp6asm3.com/inventories/${code}`,
+          `https://service.sandbox.grp6asm3.com/inventories/${code}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -55,7 +55,7 @@ const UpdateInventoryPage = () => {
   const handleUpdate = async () => {
     try {
       await axios.put(
-        `https://service.dev.grp6asm3.com/inventories/${code}`,
+        `https://service.sandbox.grp6asm3.com/inventories/${code}`,
         { quantity: inventory.quantity }, // Only send the quantity field
         {
           headers: {

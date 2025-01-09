@@ -1,15 +1,15 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = 'https://service.dev.grp6asm3.com';
+const API_BASE_URL = "https://service.sandbox.grp6asm3.com";
 
 /**
  * Helper function to get the auth headers.
  * @returns {Object} - Authorization headers
  */
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('idToken');
+  const token = localStorage.getItem("idToken");
   if (!token) {
-    throw new Error('Authorization token is missing');
+    throw new Error("Authorization token is missing");
   }
   return {
     Authorization: `Bearer ${token}`,
@@ -22,10 +22,12 @@ const getAuthHeaders = () => {
  */
 export const listOrdersAPI = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/orders`, { headers: getAuthHeaders() });
+    const response = await axios.get(`${API_BASE_URL}/orders`, {
+      headers: getAuthHeaders(),
+    });
     return response.data;
   } catch (error) {
-    console.error('Error fetching orders:', error);
+    console.error("Error fetching orders:", error);
     throw error; // Rethrow the error to be handled by the calling function
   }
 };
@@ -37,10 +39,15 @@ export const listOrdersAPI = async () => {
  */
 export const getOrderDetailAPI = async (orderId) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/orders/${orderId}`, { headers: getAuthHeaders() });
+    const response = await axios.get(`${API_BASE_URL}/orders/${orderId}`, {
+      headers: getAuthHeaders(),
+    });
     return response.data; // Assuming the response contains the order details
   } catch (error) {
-    console.error(`Error fetching order details for orderId: ${orderId}:`, error);
+    console.error(
+      `Error fetching order details for orderId: ${orderId}:`,
+      error
+    );
     throw error; // Rethrow the error to be handled by the calling function
   }
 };
@@ -52,11 +59,15 @@ export const getOrderDetailAPI = async (orderId) => {
  */
 export const cancelOrderAPI = async (orderId, reason) => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/orders/${orderId}/cancel`, {
-      reason: reason,
-    }, {
-      headers: getAuthHeaders(),
-    });
+    const response = await axios.put(
+      `${API_BASE_URL}/orders/${orderId}/cancel`,
+      {
+        reason: reason,
+      },
+      {
+        headers: getAuthHeaders(),
+      }
+    );
 
     return response.data; // Return the response data
   } catch (error) {
@@ -65,12 +76,15 @@ export const cancelOrderAPI = async (orderId, reason) => {
       console.error(`Error canceling order ${orderId}:`, error.response.data);
     } else if (error.request) {
       // The request was made but no response was received
-      console.error(`No response received for order ${orderId}:`, error.request);
+      console.error(
+        `No response received for order ${orderId}:`,
+        error.request
+      );
     } else {
       // Something happened in setting up the request
-      console.error('Error', error.message);
+      console.error("Error", error.message);
     }
-    throw new Error('Unable to cancel order. Please try again.');
+    throw new Error("Unable to cancel order. Please try again.");
   }
 };
 
@@ -81,7 +95,11 @@ export const cancelOrderAPI = async (orderId, reason) => {
  */
 export const rejectOrderAPI = async (orderId) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/orders/${orderId}/reject`, {}, { headers: getAuthHeaders() });
+    const response = await axios.post(
+      `${API_BASE_URL}/orders/${orderId}/reject`,
+      {},
+      { headers: getAuthHeaders() }
+    );
     return response.data; // Assuming the response contains the updated order status
   } catch (error) {
     console.error(`Error rejecting order (orderId: ${orderId}):`, error);
@@ -96,7 +114,11 @@ export const rejectOrderAPI = async (orderId) => {
  */
 export const completeOrderAPI = async (orderId) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/orders/${orderId}/complete`, {}, { headers: getAuthHeaders() });
+    const response = await axios.post(
+      `${API_BASE_URL}/orders/${orderId}/complete`,
+      {},
+      { headers: getAuthHeaders() }
+    );
     return response.data; // Assuming the response contains the updated order status
   } catch (error) {
     console.error(`Error completing order (orderId: ${orderId}):`, error);

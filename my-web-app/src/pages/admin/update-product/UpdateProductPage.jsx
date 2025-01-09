@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
 
 const UpdateProductPage = () => {
-    const { skuId } = useParams(); 
+  const { skuId } = useParams();
   const [product, setProduct] = useState({
     name: "",
     description: "",
@@ -37,7 +37,7 @@ const UpdateProductPage = () => {
       try {
         const token = localStorage.getItem("idToken");
         const response = await axios.get(
-          `https://service.dev.grp6asm3.com/products/${skuId}`,
+          `https://service.sandbox.grp6asm3.com/products/${skuId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -165,7 +165,7 @@ const UpdateProductPage = () => {
       };
 
       const response = await axios.put(
-        `https://service.dev.grp6asm3.com/products/${skuId}`,
+        `https://service.sandbox.grp6asm3.com/products/${skuId}`,
         updatedProduct,
         {
           headers: {

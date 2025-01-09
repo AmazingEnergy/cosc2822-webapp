@@ -25,7 +25,7 @@ const Products = () => {
 
   const fetchProducts = async () => {
     await axios
-      .get("https://service.dev.grp6asm3.com/products")
+      .get("https://service.sandbox.grp6asm3.com/products")
       .then((response) => {
         const apiProducts = response.data.items.map((item, index) => ({
           id: index + 1,
@@ -59,7 +59,6 @@ const Products = () => {
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
 
   return (
     <Box display="flex" minHeight="100vh">

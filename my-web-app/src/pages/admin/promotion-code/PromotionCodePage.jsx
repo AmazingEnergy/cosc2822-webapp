@@ -26,7 +26,7 @@ const PromotionCodePage = () => {
   const fetchPromotions = async () => {
     try {
       const response = await axios.get(
-        "https://service.dev.grp6asm3.com/promotion/codes"
+        "https://service.sandbox.grp6asm3.com/promotion/codes"
       );
       const apiPromotions = response.data.items.map((item, index) => ({
         id: index + 1,

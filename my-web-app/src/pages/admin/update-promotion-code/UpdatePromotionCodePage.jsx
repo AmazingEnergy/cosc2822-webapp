@@ -9,7 +9,7 @@ const UpdatePromotionCodePage = () => {
   const { code } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, userRole } = useAuth();
-    const token = localStorage.getItem("idToken");
+  const token = localStorage.getItem("idToken");
   const [promotion, setPromotion] = useState({
     name: "",
     quantity: 0,
@@ -33,7 +33,7 @@ const UpdatePromotionCodePage = () => {
   const fetchPromotionDetails = async () => {
     try {
       const response = await axios.get(
-        `https://service.dev.grp6asm3.com/promotion/codes/${code}`,
+        `https://service.sandbox.grp6asm3.com/promotion/codes/${code}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -70,7 +70,7 @@ const UpdatePromotionCodePage = () => {
       };
 
       await axios.put(
-        `https://service.dev.grp6asm3.com/promotion/codes/${code}`,
+        `https://service.sandbox.grp6asm3.com/promotion/codes/${code}`,
         updatedData,
         {
           headers: {

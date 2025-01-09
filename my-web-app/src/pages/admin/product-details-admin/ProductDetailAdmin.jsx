@@ -23,7 +23,7 @@ const ProductDetailAdmin = () => {
     const fetchProductDetails = async () => {
       try {
         const response = await axios.get(
-          `https://service.dev.grp6asm3.com/products/${skuId}`
+          `https://service.sandbox.grp6asm3.com/products/${skuId}`
         );
         const item = response.data;
 

@@ -36,7 +36,7 @@ const Orders = () => {
   const fetchOrders = async () => {
     const token = localStorage.getItem("idToken");
     await axios
-      .get("https://service.dev.grp6asm3.com/orders", {
+      .get("https://service.sandbox.grp6asm3.com/orders", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

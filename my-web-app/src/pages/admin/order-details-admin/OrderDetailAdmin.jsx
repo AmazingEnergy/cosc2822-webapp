@@ -25,7 +25,7 @@ const OrderDetail = () => {
       const token = localStorage.getItem("idToken");
       try {
         const response = await axios.get(
-          `https://service.dev.grp6asm3.com/orders/${orderId}`,
+          `https://service.sandbox.grp6asm3.com/orders/${orderId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -53,11 +53,11 @@ const OrderDetail = () => {
       }
 
       // Define API endpoint based on status
-      let endpoint = `https://service.dev.grp6asm3.com/orders/${order.id}`;
+      let endpoint = `https://service.sandbox.grp6asm3.com/orders/${order.id}`;
       if (selectedStatus === "completed") {
         endpoint = `${endpoint}/complete`;
       } else if (selectedStatus === "rejected") {
-        endpoint = `${endpoint}/reject`; 
+        endpoint = `${endpoint}/reject`;
       }
 
       // Send the PUT request

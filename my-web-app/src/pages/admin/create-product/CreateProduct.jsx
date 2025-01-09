@@ -19,16 +19,16 @@ const CreateProduct = () => {
     layer1: { name: "", value: "" },
     layer2: { name: "", value: "" },
   });
-   const { isAuthenticated, userRole } = useAuth();
-   const navigate = useNavigate();
+  const { isAuthenticated, userRole } = useAuth();
+  const navigate = useNavigate();
 
-   useEffect( () => {
-      if (isAuthenticated && userRole !== undefined) {
-        if (userRole !== "admin") {
-          navigate("/");
-        }
+  useEffect(() => {
+    if (isAuthenticated && userRole !== undefined) {
+      if (userRole !== "admin") {
+        navigate("/");
       }
-    }, [isAuthenticated, userRole, navigate]);
+    }
+  }, [isAuthenticated, userRole, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -110,7 +110,7 @@ const CreateProduct = () => {
       };
 
       const response = await axios.post(
-        "https://service.dev.grp6asm3.com/products",
+        "https://service.sandbox.grp6asm3.com/products",
         formattedProduct,
         {
           headers: {
