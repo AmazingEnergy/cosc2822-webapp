@@ -29,8 +29,3 @@
 2. **Start the application:** Use `npm run dev` to start the development server.  
 3. **Access the app:** Open your browser and navigate to `http://localhost:3000`.  
 
----
-
-### Notes
-- This project demonstrates the use of modern cloud technologies and best practices in E-Commerce application development.  
-- For further details about deployment and configuration, refer to the in-app documentation or contact the development team.
